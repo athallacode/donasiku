@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
@@ -27,7 +27,7 @@ class DonationService {
       String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      print('Firebase Storage failed, using Base64 fallback: $e');
+      debugPrint('Firebase Storage failed, using Base64 fallback: $e');
       // FALLBACK: Convert to Base64 and return as data URI
       String base64String = base64Encode(imageBytes);
       return 'data:image/jpeg;base64,$base64String';
@@ -44,7 +44,7 @@ class DonationService {
       String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      print('Error uploading image: $e');
+      debugPrint('Error uploading image: $e');
       rethrow;
     }
   }
@@ -54,7 +54,7 @@ class DonationService {
     try {
       await _firestore.collection(_collection).doc(donation.id).set(donation.toMap());
     } catch (e) {
-      print('Error creating donation: $e');
+      debugPrint('Error creating donation: $e');
       rethrow;
     }
   }
@@ -79,7 +79,7 @@ class DonationService {
         'requests': FieldValue.arrayUnion([request.toMap()]),
       });
     } catch (e) {
-      print('Error requesting donation: $e');
+      debugPrint('Error requesting donation: $e');
       rethrow;
     }
   }
@@ -93,9 +93,10 @@ class DonationService {
     try {
       // Get donation to modify requests
       final doc = await _firestore.collection(_collection).doc(donationId).get();
-      if (!doc.exists) return;
+      final data = doc.data();
+      if (data == null) return;
 
-      final donation = Donation.fromMap(doc.data()!);
+      final donation = Donation.fromMap(data);
       final updatedRequests = donation.requests.map((r) {
         if (r.requesterId == requesterId) {
           return DonationRequest(
@@ -123,7 +124,7 @@ class DonationService {
         'requests': updatedRequests.map((r) => r.toMap()).toList(),
       });
     } catch (e) {
-      print('Error approving request: $e');
+      debugPrint('Error approving request: $e');
       rethrow;
     }
   }
@@ -135,9 +136,10 @@ class DonationService {
   }) async {
     try {
       final doc = await _firestore.collection(_collection).doc(donationId).get();
-      if (!doc.exists) return;
+      final data = doc.data();
+      if (data == null) return;
 
-      final donation = Donation.fromMap(doc.data()!);
+      final donation = Donation.fromMap(data);
       final updatedRequests = donation.requests.map((r) {
         if (r.requesterId == requesterId) {
           return DonationRequest(
@@ -155,7 +157,7 @@ class DonationService {
         'requests': updatedRequests.map((r) => r.toMap()).toList(),
       });
     } catch (e) {
-      print('Error rejecting request: $e');
+      debugPrint('Error rejecting request: $e');
       rethrow;
     }
   }
@@ -167,7 +169,7 @@ class DonationService {
         'status': 'Dikirim',
       });
     } catch (e) {
-      print('Error marking as shipped: $e');
+      debugPrint('Error marking as shipped: $e');
       rethrow;
     }
   }
@@ -179,7 +181,19 @@ class DonationService {
         'status': 'Diterima',
       });
     } catch (e) {
-      print('Error marking as received: $e');
+      debugPrint('Error marking as received: $e');
+      rethrow;
+    }
+  }
+
+  // Mark donation as cancelled
+  Future<void> cancelDonation(String donationId) async {
+    try {
+      await _firestore.collection(_collection).doc(donationId).update({
+        'status': 'Dibatalkan',
+      });
+    } catch (e) {
+      debugPrint('Error cancelling donation: $e');
       rethrow;
     }
   }
@@ -192,7 +206,7 @@ class DonationService {
         'receiverId': receiverId,
       });
     } catch (e) {
-      print('Error claiming donation: $e');
+      debugPrint('Error claiming donation: $e');
       rethrow;
     }
   }
@@ -245,7 +259,7 @@ class DonationService {
     try {
       await _firestore.collection(_collection).doc(donationId).delete();
     } catch (e) {
-      print('Error deleting donation: $e');
+      debugPrint('Error deleting donation: $e');
       rethrow;
     }
   }

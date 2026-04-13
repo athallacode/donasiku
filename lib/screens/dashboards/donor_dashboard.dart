@@ -6,7 +6,6 @@ import '../../models/donation_model.dart';
 import '../donation_detail_screen.dart';
 import '../donation_management_screen.dart';
 import '../../widgets/donation_image.dart';
-import 'package:intl/intl.dart';
 
 class DonorDashboard extends StatefulWidget {
   const DonorDashboard({super.key});
@@ -67,8 +66,6 @@ class _DonorDashboardState extends State<DonorDashboard> {
           final int pendingRequests = donations.fold<int>(
             0, (sum, d) => sum + d.pendingRequestsCount,
           );
-          final int activeItems =
-              donations.where((d) => d.status != 'Diterima').length;
           final int receivedItems = 
               donations.where((d) => d.status == 'Diterima').length;
 

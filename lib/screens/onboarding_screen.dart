@@ -90,7 +90,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             height: 280,
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: (_pages[index]['color'] as Color).withOpacity(0.08),
+                              color: (_pages[index]['color'] as Color).withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(32),
                             ),
                             child: ClipRRect(

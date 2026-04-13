@@ -132,7 +132,7 @@ class _DonationDetailScreenState extends State<DonationDetailScreen> {
       receiverName: widget.donation.receiverName ?? '',
     );
 
-    if (mounted) {
+    if (context.mounted) {
       Navigator.push(
         context,
         MaterialPageRoute(

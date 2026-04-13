@@ -331,7 +331,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       );
                       if (confirmed == true) {
                         await _authService.signOut();
-                        if (mounted) {
+                        if (context.mounted) {
                           Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
                         }
                       }

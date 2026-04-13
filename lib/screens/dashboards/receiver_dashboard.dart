@@ -313,7 +313,7 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Baru Ditambahkan 🔥', style: AppTheme.headingSmall),
+                            Text('Baru Ditambahkan ', style: AppTheme.headingSmall),
                           ],
                         ),
                       ),

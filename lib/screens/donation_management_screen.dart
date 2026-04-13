@@ -222,7 +222,61 @@ class DonationManagementScreen extends StatelessWidget {
             ),
           ],
 
+          // ── Action Buttons (Cancel) ──
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  _showCancelConfirmation(context, donationService);
+                },
+                icon: const Icon(Icons.cancel_outlined, size: 20),
+                label: const Text('Batalkan Donasi'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.errorRed,
+                  side: const BorderSide(color: AppTheme.errorRed),
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
+      ),
+    );
+  }
+
+  void _showCancelConfirmation(BuildContext context, DonationService donationService) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Batalkan Donasi?'),
+        content: const Text('Apakah Anda yakin ingin membatalkan donasi ini? Data akan dipindahkan ke Riwayat.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tidak'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await donationService.cancelDonation(donation.id);
+              if (context.mounted) {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back from management
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Donasi telah dibatalkan'),
+                    backgroundColor: AppTheme.errorRed,
+                  ),
+                );
+              }
+            },
+            child: const Text('Ya, Batalkan', style: TextStyle(color: AppTheme.errorRed)),
+          ),
         ],
       ),
     );

@@ -49,6 +49,8 @@ class Donation {
   final String status; // 'Tersedia', 'Diproses', 'Dikirim', 'Diterima'
   final String? receiverId;
   final String? receiverName;
+  final double? latitude;
+  final double? longitude;
   final List<DonationRequest> requests;
 
   Donation({
@@ -64,6 +66,8 @@ class Donation {
     this.status = 'Tersedia',
     this.receiverId,
     this.receiverName,
+    this.latitude,
+    this.longitude,
     this.requests = const [],
   });
 
@@ -84,6 +88,8 @@ class Donation {
       'status': status,
       'receiverId': receiverId,
       'receiverName': receiverName,
+      'latitude': latitude,
+      'longitude': longitude,
       'requests': requests.map((r) => r.toMap()).toList(),
     };
   }
@@ -104,6 +110,8 @@ class Donation {
       status: map['status'] ?? 'Tersedia',
       receiverId: map['receiverId'],
       receiverName: map['receiverName'],
+      latitude: (map['latitude'] as num?)?.toDouble(),
+      longitude: (map['longitude'] as num?)?.toDouble(),
       requests: map['requests'] != null
           ? (map['requests'] as List)
               .map((r) => DonationRequest.fromMap(r as Map<String, dynamic>))
@@ -125,6 +133,8 @@ class Donation {
     String? status,
     String? receiverId,
     String? receiverName,
+    double? latitude,
+    double? longitude,
     List<DonationRequest>? requests,
   }) {
     return Donation(
@@ -140,6 +150,8 @@ class Donation {
       status: status ?? this.status,
       receiverId: receiverId ?? this.receiverId,
       receiverName: receiverName ?? this.receiverName,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       requests: requests ?? this.requests,
     );
   }

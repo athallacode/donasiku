@@ -11,6 +11,8 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+*.bak
+*~
 
 # IntelliJ related
 *.iml
@@ -18,10 +20,8 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code related
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -43,3 +43,23 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Sensitive Firebase setup
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Local Environment
+.env*
+local.properties
+
+# Android signing
+*.jks
+*.keystore
+/android/key.properties
+
+# Flutter logs
+flutter_*.log
+
+# Windows specific
+Thumb.db
+desktop.ini
