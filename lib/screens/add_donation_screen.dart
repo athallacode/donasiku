@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../models/donation_model.dart';
 import '../services/auth_service.dart';
 import '../services/donation_service.dart';
+import '../modules/pencarian_area/screens/location_picker_screen.dart';
 import '../theme.dart';
 
 class AddDonationScreen extends StatefulWidget {
@@ -24,6 +25,8 @@ class _AddDonationScreenState extends State<AddDonationScreen> {
   File? _imageFile;
   Uint8List? _imageBytes;
   bool _isLoading = false;
+  double? _latitude;
+  double? _longitude;
 
   final List<String> _categories = ['Pakaian', 'Makanan', 'Buku', 'Elektronik', 'Lainnya'];
   final DonationService _donationService = DonationService();
@@ -146,6 +149,24 @@ class _AddDonationScreenState extends State<AddDonationScreen> {
     );
   }
 
+  /// Membuka layar map picker untuk memilih lokasi secara manual
+  Future<void> _pickLocation() async {
+    final result = await Navigator.push<LocationPickerResult>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LocationPickerScreen(),
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _locationController.text = result.address;
+        _latitude = result.location.latitude;
+        _longitude = result.location.longitude;
+      });
+    }
+  }
+
   Future<void> _submitDonation() async {
     if (!_formKey.currentState!.validate()) return;
     if (_imageBytes == null) {
@@ -180,6 +201,8 @@ class _AddDonationScreenState extends State<AddDonationScreen> {
         imageUrl: imageUrl,
         location: _locationController.text,
         createdAt: DateTime.now(),
+        latitude: _latitude,
+        longitude: _longitude,
       );
 
       // 3. Save to Firestore
@@ -396,7 +419,7 @@ class _AddDonationScreenState extends State<AddDonationScreen> {
                           Text('Kategori', style: AppTheme.labelBold),
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            value: _selectedCategory,
+                            initialValue: _selectedCategory,
                             decoration: const InputDecoration(
                               prefixIcon: Icon(Icons.category_outlined, color: AppTheme.primaryBlue, size: 22),
                             ),
@@ -418,9 +441,14 @@ class _AddDonationScreenState extends State<AddDonationScreen> {
                           TextFormField(
                             controller: _locationController,
                             style: AppTheme.bodyLarge,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               hintText: 'Contoh: Kec. Sukolilo, Surabaya',
-                              prefixIcon: Icon(Icons.location_on_outlined, color: AppTheme.primaryBlue, size: 22),
+                              prefixIcon: const Icon(Icons.location_on_outlined, color: AppTheme.primaryBlue, size: 22),
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.map_rounded, color: AppTheme.primaryBlue),
+                                tooltip: 'Pilih di Peta',
+                                onPressed: _pickLocation,
+                              ),
                             ),
                             validator: (value) =>
                                 value == null || value.isEmpty

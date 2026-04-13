@@ -7,6 +7,8 @@ import 'pending_verification_screen.dart';
 import 'tracking_screen.dart';
 import 'chat_list_screen.dart';
 import 'profile_screen.dart';
+import '../modules/pencarian_area/screens/discovery_screen.dart';
+import '../modules/pencarian_area/models/donation_item.dart';
 import '../theme.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -72,7 +74,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ElevatedButton(
                 onPressed: () async {
                   await _authService.signOut();
-                  if (mounted) Navigator.pushReplacementNamed(context, '/login');
+                  if (context.mounted) Navigator.pushReplacementNamed(context, '/login');
                 },
                 child: const Text('Keluar'),
               ),
@@ -91,16 +93,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return const PendingVerificationScreen();
     }
 
-    // 4-tab pages for verified roles
+    // Konversi role string ke UserRole enum
+    final userRole = UserRole.fromString(_role!);
+
+    // 5-tab pages: Dashboard, Cari, Tracking, Chat, Profil
     final List<Widget> pages = _role == 'Donatur'
         ? [
             const DonorDashboard(),
+            DiscoveryScreen(
+              userRole: userRole,
+              isLocationVerified: _isVerified,
+            ),
             const TrackingScreen(),
             const ChatListScreen(),
             const ProfileScreen(),
           ]
         : [
             const ReceiverDashboard(),
+            DiscoveryScreen(
+              userRole: userRole,
+              isLocationVerified: _isVerified,
+            ),
             const TrackingScreen(),
             const ChatListScreen(),
             const ProfileScreen(),
@@ -112,6 +125,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               icon: Icon(Icons.dashboard_outlined),
               activeIcon: Icon(Icons.dashboard_rounded),
               label: 'Dashboard',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search_outlined),
+              activeIcon: Icon(Icons.search_rounded),
+              label: 'Cari',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.local_shipping_outlined),
@@ -134,6 +152,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               icon: Icon(Icons.explore_outlined),
               activeIcon: Icon(Icons.explore_rounded),
               label: 'Jelajahi',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search_outlined),
+              activeIcon: Icon(Icons.search_rounded),
+              label: 'Cari',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.local_shipping_outlined),

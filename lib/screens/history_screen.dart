@@ -128,12 +128,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
             child: FutureBuilder<String?>(
               future: _authService.getUserRole(user?.uid ?? ''),
               builder: (context, roleSnapshot) {
+                if (roleSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: AppTheme.primaryBlue),
+                  );
+                }
+                
                 final role = roleSnapshot.data;
+                final userId = user?.uid ?? '';
 
                 return StreamBuilder<List<Donation>>(
                   stream: role == 'Donatur'
-                      ? _donationService.getDonationsByDonor(user?.uid ?? '')
-                      : _donationService.getDonationsByReceiver(user?.uid ?? ''),
+                      ? _donationService.getDonationsByDonor(userId)
+                      : _donationService.getDonationsByReceiver(userId),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
@@ -142,17 +149,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     }
 
                     var donations = snapshot.data ?? [];
-                    donations = donations.where((d) => d.status == 'Diterima').toList();
+                    // Sertakan status 'Diterima' dan 'Dibatalkan'
+                    donations = donations.where((d) => d.status == 'Diterima' || d.status == 'Dibatalkan').toList();
 
                     if (_selectedCategory != 'Semua') {
                       donations = donations.where((d) => d.category == _selectedCategory).toList();
                     }
 
                     if (_selectedMonth != null) {
-                      final month = DateTime.parse(_selectedMonth!);
-                      donations = donations.where((d) =>
-                          d.createdAt.year == month.year &&
-                          d.createdAt.month == month.month).toList();
+                      final monthStr = _selectedMonth;
+                      if (monthStr != null) {
+                        try {
+                          final month = DateTime.parse(monthStr);
+                          donations = donations.where((d) =>
+                              d.createdAt.year == month.year &&
+                              d.createdAt.month == month.month).toList();
+                        } catch (e) {
+                          debugPrint('Error parsing month in history: $e');
+                        }
+                      }
                     }
 
                     donations.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -342,13 +357,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppTheme.emeraldGreen.withAlpha(25),
+                            color: (donation.status == 'Dibatalkan' 
+                                ? AppTheme.errorRed 
+                                : AppTheme.emeraldGreen).withAlpha(25),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            'Selesai',
+                            donation.status == 'Dibatalkan' ? 'Dibatalkan' : 'Selesai',
                             style: AppTheme.bodySmall.copyWith(
-                              color: AppTheme.emeraldGreen,
+                              color: donation.status == 'Dibatalkan' 
+                                  ? AppTheme.errorRed 
+                                  : AppTheme.emeraldGreen,
                               fontWeight: FontWeight.w600,
                               fontSize: 10,
                             ),
@@ -359,11 +378,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     const SizedBox(height: 4),
                     Text(
                       role == 'Donatur'
-                          ? 'Penerima: ${donation.receiverName}'
-                          : 'Donatur: ${donation.donorName}',
+                          ? 'Penerima: ${donation.receiverName ?? 'Belum ada'}'
+                          : 'Donatur: ${donation.donorName.isNotEmpty ? donation.donorName : 'Anonim'}',
                       style: AppTheme.bodySmall.copyWith(fontSize: 12),
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
                         Text(

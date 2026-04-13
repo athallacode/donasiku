@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -80,7 +81,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error getting user role: $e');
+      debugPrint('Error getting user role: $e');
       return null;
     }
   }
@@ -94,7 +95,7 @@ class AuthService {
       }
       return false;
     } catch (e) {
-      print('Error getting verification status: $e');
+      debugPrint('Error getting verification status: $e');
       return false;
     }
   }
@@ -108,7 +109,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print('Error getting user profile: $e');
+      debugPrint('Error getting user profile: $e');
       return null;
     }
   }
@@ -142,7 +143,7 @@ class AuthService {
         await _firestore.collection('users').doc(uid).update(data);
       }
     } catch (e) {
-      print('Error updating user profile: $e');
+      debugPrint('Error updating user profile: $e');
       rethrow;
     }
   }

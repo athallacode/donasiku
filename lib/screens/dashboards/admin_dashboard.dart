@@ -170,12 +170,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
             padding: const EdgeInsets.all(16),
             itemCount: docs.length,
             itemBuilder: (context, index) {
-              final UserData = docs[index].data() as Map<String, dynamic>;
+              final userData = docs[index].data() as Map<String, dynamic>;
               final String uid = docs[index].id;
-              final String name = UserData['name'] ?? 'Tanpa Nama';
-              final String email = UserData['email'] ?? 'Tanpa Email';
-              final String ktpUrl = UserData['ktpUrl'] ?? '';
-              final String sktmUrl = UserData['sktmUrl'] ?? '';
+              final String name = userData['name'] ?? 'Tanpa Nama';
+              final String email = userData['email'] ?? 'Tanpa Email';
+              final String ktpUrl = userData['ktpUrl'] ?? '';
+              final String sktmUrl = userData['sktmUrl'] ?? '';
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 16),
