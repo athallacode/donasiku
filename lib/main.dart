@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,12 @@ void main() async {
   } catch (e) {
     AppErrorHandler.logError('Main.initialize', e);
   }
+  // Catch errors that happen outside the Flutter framework
+  PlatformDispatcher.instance.onError = (error, stack) {
+    AppErrorHandler.logError('System.PlatformError', error, stack);
+    return true; // Error handled
+  };
+
   runApp(const DonasikuApp());
 }
 

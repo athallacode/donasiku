@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
+import '../utils/app_error_handler.dart';
 import '../models/chat_model.dart';
 
 class ChatService {
@@ -14,25 +15,30 @@ class ChatService {
     required String receiverId,
     required String receiverName,
   }) async {
-    final roomId = '${donationId}_${donorId}_$receiverId';
+    try {
+      final roomId = '${donationId}_${donorId}_$receiverId';
 
-    final doc = await _firestore.collection('chatRooms').doc(roomId).get();
-    if (doc.exists) {
-      return ChatRoom.fromMap(doc.data()!);
+      final doc = await _firestore.collection('chatRooms').doc(roomId).get();
+      if (doc.exists) {
+        return ChatRoom.fromMap(doc.data()!);
+      }
+
+      final chatRoom = ChatRoom(
+        id: roomId,
+        donationId: donationId,
+        donationName: donationName,
+        donorId: donorId,
+        donorName: donorName,
+        receiverId: receiverId,
+        receiverName: receiverName,
+      );
+
+      await _firestore.collection('chatRooms').doc(roomId).set(chatRoom.toMap());
+      return chatRoom;
+    } catch (e) {
+      AppErrorHandler.logError('ChatService.getOrCreateChatRoom', e);
+      rethrow;
     }
-
-    final chatRoom = ChatRoom(
-      id: roomId,
-      donationId: donationId,
-      donationName: donationName,
-      donorId: donorId,
-      donorName: donorName,
-      receiverId: receiverId,
-      receiverName: receiverName,
-    );
-
-    await _firestore.collection('chatRooms').doc(roomId).set(chatRoom.toMap());
-    return chatRoom;
   }
 
   // Send a message
@@ -42,28 +48,33 @@ class ChatService {
     required String senderName,
     required String text,
   }) async {
-    final messageId = const Uuid().v4();
-    final message = ChatMessage(
-      id: messageId,
-      senderId: senderId,
-      senderName: senderName,
-      text: text,
-      timestamp: DateTime.now(),
-    );
+    try {
+      final messageId = const Uuid().v4();
+      final message = ChatMessage(
+        id: messageId,
+        senderId: senderId,
+        senderName: senderName,
+        text: text,
+        timestamp: DateTime.now(),
+      );
 
-    // Add message to subcollection
-    await _firestore
-        .collection('chatRooms')
-        .doc(chatRoomId)
-        .collection('messages')
-        .doc(messageId)
-        .set(message.toMap());
+      // Add message to subcollection
+      await _firestore
+          .collection('chatRooms')
+          .doc(chatRoomId)
+          .collection('messages')
+          .doc(messageId)
+          .set(message.toMap());
 
-    // Update chat room metadata
-    await _firestore.collection('chatRooms').doc(chatRoomId).update({
-      'lastMessage': text,
-      'lastMessageTime': Timestamp.fromDate(DateTime.now()),
-    });
+      // Update chat room metadata
+      await _firestore.collection('chatRooms').doc(chatRoomId).update({
+        'lastMessage': text,
+        'lastMessageTime': Timestamp.fromDate(DateTime.now()),
+      });
+    } catch (e) {
+      AppErrorHandler.logError('ChatService.sendMessage', e);
+      rethrow;
+    }
   }
 
   // Stream messages for a chat room
@@ -78,6 +89,8 @@ class ChatService {
       return snapshot.docs
           .map((doc) => ChatMessage.fromMap(doc.data()))
           .toList();
+    }).handleError((error) {
+      AppErrorHandler.logError('ChatService.getMessagesStream', error);
     });
   }
 
@@ -113,6 +126,8 @@ class ChatService {
 
         rooms.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
         return rooms;
+      }).handleError((error) {
+        AppErrorHandler.logError('ChatService.getChatRoomsStream', error);
       });
     });
   }

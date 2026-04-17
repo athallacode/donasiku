@@ -1,9 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import '../theme.dart';
 
 class AppErrorHandler {
+  static final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
+
   /// Maps technical exceptions to user-friendly Indonesian messages.
   static String mapErrorToMessage(dynamic error) {
     if (error is FirebaseAuthException) {
@@ -37,18 +41,55 @@ class AppErrorHandler {
           return 'Anda tidak memiliki izin untuk melakukan aksi ini.';
         case 'unavailable':
           return 'Layanan sedang tidak tersedia. Coba lagi nanti.';
+        case 'not-found':
+          return 'Data yang Anda cari tidak ditemukan.';
+        case 'already-exists':
+          return 'Data ini sudah ada dalam sistem.';
+        case 'deadline-exceeded':
+          return 'Waktu koneksi habis. Silakan coba lagi.';
+        case 'quota-exceeded':
+          return 'Kapasitas server penuh. Silakan coba beberapa saat lagi.';
         default:
-          return 'Gagal memproses data ke server.';
+          return 'Terjadi masalah komunikasi dengan server (${error.code}).';
       }
     } else if (error is Exception) {
       final message = error.toString().replaceFirst('Exception: ', '');
       if (message.contains('SocketException')) {
-        return 'Gagal terhubung ke internet.';
+        return 'Gagal terhubung ke internet. Periksa koneksi Anda.';
       }
       return message;
     }
 
-    return 'Terjadi kesalahan yang tidak terduga.';
+    return 'Terjadi kesalahan yang tidak terduga: ${error.toString()}';
+  }
+
+  /// Wraps an async action with automatic loading, logging, and error notification.
+  /// Used to make code more "voluminous" and robust.
+  static Future<T?> performSafeAction<T>(
+    BuildContext context, {
+    required Future<T> Function() action,
+    required String featureName,
+    String? successMessage,
+    Function(bool)? loadingStateSetter,
+  }) async {
+    try {
+      loadingStateSetter?.call(true);
+      final result = await action();
+      
+      if (successMessage != null && context.mounted) {
+        showSuccess(context, successMessage);
+      }
+      
+      return result;
+    } catch (e, stack) {
+      logError(featureName, e, stack);
+      if (context.mounted) {
+        showError(context, e);
+      }
+      return null;
+    } finally {
+      loadingStateSetter?.call(false);
+    }
   }
 
   /// Shows a standardized error snackbar.
@@ -92,32 +133,58 @@ class AppErrorHandler {
     );
   }
 
-  /// Standardized logging (can be extended to Firestore later)
-  static void logError(String feature, dynamic error, [StackTrace? stackTrace]) {
+  /// Standardized logging with device info and Firestore sync.
+  static void logError(String feature, dynamic error, [StackTrace? stackTrace]) async {
+    final timestamp = DateTime.now();
     debugPrint('----------------------------------------');
     debugPrint('ERROR in Feature: $feature');
-    debugPrint('Timestamp: ${DateTime.now()}');
+    debugPrint('Timestamp: $timestamp');
     debugPrint('Message: $error');
     if (stackTrace != null) {
       debugPrint('StackTrace: $stackTrace');
     }
     debugPrint('----------------------------------------');
     
-    // Log to Firestore for critical tracking
-    _logToFirestore(feature, error);
+    // Log to Firestore with enhanced metadata
+    _logToFirestore(feature, error, stackTrace, timestamp);
   }
 
-  /// Private helper to log errors to Firestore collection
-  static void _logToFirestore(String feature, dynamic error) {
+  /// Private helper to log errors to Firestore collection with device details.
+  static void _logToFirestore(String feature, dynamic error, StackTrace? stack, DateTime time) async {
     try {
-      FirebaseFirestore.instance.collection('error_logs').add({
+      Map<String, dynamic> deviceData = {};
+      
+      try {
+        if (Platform.isAndroid) {
+          AndroidDeviceInfo androidInfo = await _deviceInfo.androidInfo;
+          deviceData = {
+            'model': androidInfo.model,
+            'brand': androidInfo.brand,
+            'version': androidInfo.version.release,
+            'sdk': androidInfo.version.sdkInt,
+          };
+        } else if (Platform.isIOS) {
+          IosDeviceInfo iosInfo = await _deviceInfo.iosInfo;
+          deviceData = {
+            'model': iosInfo.utsname.machine,
+            'version': iosInfo.systemVersion,
+            'name': iosInfo.name,
+          };
+        }
+      } catch (e) {
+        deviceData = {'error': 'Failed to get device info: $e'};
+      }
+
+      await FirebaseFirestore.instance.collection('error_logs').add({
         'feature': feature,
         'message': error.toString(),
-        'timestamp': FieldValue.serverTimestamp(),
-        'platform': 'Android/iOS', // Simplified for now
+        'stackTrace': stack?.toString(),
+        'timestamp': time,
+        'device': deviceData,
+        'platform': Platform.operatingSystem,
       });
     } catch (e) {
-      debugPrint('Failed to log error to Firestore: $e');
+      debugPrint('CRITICAL: Failed to log error to Firestore: $e');
     }
   }
 }

@@ -4,6 +4,7 @@ import '../services/auth_service.dart';
 import '../services/donation_service.dart';
 import '../models/donation_model.dart';
 import '../widgets/donation_image.dart';
+import '../utils/app_error_handler.dart';
 import 'donation_detail_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -128,9 +129,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
             child: FutureBuilder<String?>(
               future: _authService.getUserRole(user?.uid ?? ''),
               builder: (context, roleSnapshot) {
-                if (roleSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppTheme.primaryBlue),
+                if (roleSnapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline_rounded, size: 48, color: AppTheme.errorRed),
+                        const SizedBox(height: 16),
+                        Text('Gagal memuat peran', style: AppTheme.headingSmall),
+                        Text(AppErrorHandler.mapErrorToMessage(roleSnapshot.error), style: AppTheme.bodyMedium),
+                      ],
+                    ),
                   );
                 }
                 
@@ -145,6 +154,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
                         child: CircularProgressIndicator(color: AppTheme.primaryBlue),
+                      );
+                    }
+
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.cloud_off_rounded, size: 48, color: AppTheme.textGrey),
+                            const SizedBox(height: 16),
+                            Text('Gagal memuat riwayat', style: AppTheme.headingSmall),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 40),
+                              child: Text(
+                                AppErrorHandler.mapErrorToMessage(snapshot.error),
+                                textAlign: TextAlign.center,
+                                style: AppTheme.bodyMedium,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () => setState(() {}),
+                              child: const Text('Coba Lagi'),
+                            ),
+                          ],
+                        ),
                       );
                     }
 

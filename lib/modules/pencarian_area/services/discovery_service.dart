@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/donation_item.dart';
 import '../models/category.dart';
 import '../utils/distance_calculator.dart';
+import '../utils/app_error_handler.dart';
 import 'mock_data.dart';
 
 /// Service layer untuk Discovery Engine
@@ -32,7 +33,7 @@ class DiscoveryService {
         return DonationItem.fromFirestore(data);
       }).toList();
     } catch (e) {
-      debugPrint('Error fetching donations from Firestore: $e');
+      AppErrorHandler.logError('DiscoveryService._fetchAllItems', e);
       rethrow;
     }
   }
@@ -47,40 +48,45 @@ class DiscoveryService {
     double maxRadiusKm = 10.0,
     ItemStatus? adminStatusFilter,
   }) async {
-    // Validasi koordinat user
-    if (!DiscoveryDistance.isValidIndonesianCoordinate(userLocation)) {
-      throw InvalidCoordinateException(
-        'Koordinat lokasi tidak valid. Pastikan lokasi berada di wilayah Indonesia.',
-      );
+    try {
+      // Validasi koordinat user
+      if (!DiscoveryDistance.isValidIndonesianCoordinate(userLocation)) {
+        throw InvalidCoordinateException(
+          'Koordinat lokasi tidak valid. Pastikan lokasi berada di wilayah Indonesia.',
+        );
+      }
+
+      // Ambil semua data
+      List<DonationItem> items = await _fetchAllItems();
+
+      // === FILTER CHAIN (urutan wajib) ===
+
+      // 1. Filter status berdasarkan role
+      items = _filterByStatus(items, userRole, adminStatusFilter);
+
+      // 2. Filter kategori
+      items = _filterByCategory(items, selectedCategories);
+
+      // 3. Filter keyword (case-insensitive di name & description)
+      items = _filterByKeyword(items, keyword);
+
+      // 4. Filter jarak + hitung distance
+      items = _filterByDistance(items, userLocation, maxRadiusKm);
+
+      // === SORTING ===
+      // Primary: distance ASC (terdekat dulu)
+      // Secondary (tiebreaker): postedAt DESC (terbaru dulu)
+      items.sort((a, b) {
+        final distCompare = (a.distanceKm ?? 0).compareTo(b.distanceKm ?? 0);
+        if (distCompare != 0) return distCompare;
+        return b.postedAt.compareTo(a.postedAt);
+      });
+
+      return items;
+    } catch (e) {
+      AppErrorHandler.logError('DiscoveryService.searchAndFilter', e);
+      rethrow;
     }
-
-    // Ambil semua data
-    List<DonationItem> items = await _fetchAllItems();
-
-    // === FILTER CHAIN (urutan wajib) ===
-
-    // 1. Filter status berdasarkan role
-    items = _filterByStatus(items, userRole, adminStatusFilter);
-
-    // 2. Filter kategori
-    items = _filterByCategory(items, selectedCategories);
-
-    // 3. Filter keyword (case-insensitive di name & description)
-    items = _filterByKeyword(items, keyword);
-
-    // 4. Filter jarak + hitung distance
-    items = _filterByDistance(items, userLocation, maxRadiusKm);
-
-    // === SORTING ===
-    // Primary: distance ASC (terdekat dulu)
-    // Secondary (tiebreaker): postedAt DESC (terbaru dulu)
-    items.sort((a, b) {
-      final distCompare = (a.distanceKm ?? 0).compareTo(b.distanceKm ?? 0);
-      if (distCompare != 0) return distCompare;
-      return b.postedAt.compareTo(a.postedAt);
-    });
-
-    return items;
   }
 
   /// Step 1: Filter berdasarkan status & role
@@ -157,8 +163,13 @@ class DiscoveryService {
 
   /// Hitung total item tanpa filter (untuk counter)
   Future<int> getTotalItemCount() async {
-    final items = await _fetchAllItems();
-    return items.length;
+    try {
+      final items = await _fetchAllItems();
+      return items.length;
+    } catch (e) {
+      AppErrorHandler.logError('DiscoveryService.getTotalItemCount', e);
+      return 0;
+    }
   }
 }
 
