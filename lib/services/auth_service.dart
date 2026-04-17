@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/app_error_handler.dart';
+import 'app_notification_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -38,6 +39,12 @@ class AuthService {
           'photoUrl': '',
           'createdAt': FieldValue.serverTimestamp(),
         });
+
+        AppNotificationService().showInstantNotification(
+          id: 1,
+          title: 'Akun Berhasil Dibuat! 🎉',
+          body: 'Selamat bergabung di Donasiku, ${name.isNotEmpty ? name : email.split('@').first}.',
+        );
       }
 
       return userCredential;
@@ -57,6 +64,13 @@ class AuthService {
         email: email,
         password: password,
       );
+
+      AppNotificationService().showInstantNotification(
+        id: 2,
+        title: 'Selamat Datang Kembali! 👋',
+        body: 'Berbagi kebaikan dimulai dari sini.',
+      );
+
       return userCredential;
     } catch (e) {
       AppErrorHandler.logError('AuthService.signIn', e);

@@ -12,10 +12,17 @@ import 'screens/add_donation_screen.dart';
 import 'screens/history_screen.dart';
 import 'modules/pencarian_area/providers/discovery_provider.dart';
 import 'utils/app_error_handler.dart';
+import 'services/app_notification_service.dart';
 import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize notification service
+  final notificationService = AppNotificationService();
+  await notificationService.initialize();
+  await notificationService.scheduleDailyReminder();
+
   try {
     await Firebase.initializeApp();
   } catch (e) {

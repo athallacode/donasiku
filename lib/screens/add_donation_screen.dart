@@ -7,6 +7,7 @@ import '../models/donation_model.dart';
 import '../services/auth_service.dart';
 import '../services/donation_service.dart';
 import '../modules/pencarian_area/screens/location_picker_screen.dart';
+import '../services/app_notification_service.dart';
 import '../utils/app_error_handler.dart';
 import '../theme.dart';
 
@@ -201,6 +202,13 @@ class _AddDonationScreenState extends State<AddDonationScreen> {
 
         // 3. Save to Firestore
         await _donationService.createDonation(donation);
+
+        // 4. Trigger Notification
+        AppNotificationService().showInstantNotification(
+          id: 3,
+          title: 'Donasi Terkirim! 📦',
+          body: 'Produk ${_nameController.text} sedang menunggu penerima yang tepat.',
+        );
 
         if (context.mounted) {
           Navigator.pop(context);
