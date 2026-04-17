@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../services/auth_service.dart';
+import '../utils/app_error_handler.dart';
 import 'history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -57,21 +58,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await _loadProfile();
       if (mounted) {
         setState(() => _isEditing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Profil berhasil diperbarui!'),
-            backgroundColor: AppTheme.successGreen,
-          ),
-        );
+        AppErrorHandler.showSuccess(context, 'Profil berhasil diperbarui!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal menyimpan: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        AppErrorHandler.showError(context, e);
       }
     }
     setState(() => _isLoading = false);

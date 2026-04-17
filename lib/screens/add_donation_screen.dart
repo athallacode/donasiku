@@ -7,6 +7,7 @@ import '../models/donation_model.dart';
 import '../services/auth_service.dart';
 import '../services/donation_service.dart';
 import '../modules/pencarian_area/screens/location_picker_screen.dart';
+import '../utils/app_error_handler.dart';
 import '../theme.dart';
 
 class AddDonationScreen extends StatefulWidget {
@@ -50,12 +51,7 @@ class _AddDonationScreenState extends State<AddDonationScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal mengambil gambar: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        AppErrorHandler.showError(context, e);
       }
     }
   }
@@ -170,12 +166,7 @@ class _AddDonationScreenState extends State<AddDonationScreen> {
   Future<void> _submitDonation() async {
     if (!_formKey.currentState!.validate()) return;
     if (_imageBytes == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Silakan pilih foto produk'),
-          backgroundColor: AppTheme.warningOrange,
-        ),
-      );
+      AppErrorHandler.showWarning(context, 'Silakan pilih foto produk');
       return;
     }
 
@@ -209,22 +200,12 @@ class _AddDonationScreenState extends State<AddDonationScreen> {
       await _donationService.createDonation(donation);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Donasi berhasil dikirim! 🎉'),
-            backgroundColor: AppTheme.successGreen,
-          ),
-        );
+        AppErrorHandler.showSuccess(context, 'Donasi berhasil dikirim! 🎉');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        AppErrorHandler.showError(context, e);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

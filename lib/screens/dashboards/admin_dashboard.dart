@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../theme.dart';
 import '../../services/auth_service.dart';
+import '../../utils/app_error_handler.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -20,18 +21,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
         'isVerified': true,
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Akun Penerima berhasil disetujui.'),
-            backgroundColor: AppTheme.emeraldGreen,
-          ),
-        );
+        AppErrorHandler.showSuccess(context, 'Akun Penerima berhasil disetujui.');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menyetujui: $e')),
-        );
+        AppErrorHandler.showError(context, e);
       }
     }
   }
@@ -42,18 +36,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
       // For MVP, we delete the firestore profile so they can't login as Penerima.
       await _firestore.collection('users').doc(uid).delete();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Akun Penerima ditolak dan dihapus.'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        AppErrorHandler.showError(context, 'Akun Penerima ditolak dan dihapus.');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menolak: $e')),
-        );
+        AppErrorHandler.showError(context, e);
       }
     }
   }
@@ -139,7 +126,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text('Terjadi Kesalahan: ${snapshot.error}'));
+            return Center(child: Text('Terjadi Kesalahan: ${AppErrorHandler.mapErrorToMessage(snapshot.error)}'));
           }
 
           final docs = snapshot.data?.docs ?? [];

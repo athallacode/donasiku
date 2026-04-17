@@ -6,6 +6,7 @@ import '../models/donation_item.dart';
 import '../models/category.dart';
 import '../services/discovery_service.dart';
 import '../services/mock_data.dart';
+import '../../../utils/app_error_handler.dart';
 
 /// Mode tampilan hasil pencarian
 enum ViewMode { list, map }
@@ -191,7 +192,7 @@ class DiscoveryProvider extends ChangeNotifier {
       _errorMessage = e.message;
       _results = [];
     } catch (e) {
-      _errorMessage = 'Gagal memuat data: ${e.toString()}';
+      _errorMessage = AppErrorHandler.mapErrorToMessage(e);
       _results = [];
     } finally {
       _isLoading = false;

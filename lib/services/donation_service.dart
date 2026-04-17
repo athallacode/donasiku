@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
+import '../utils/app_error_handler.dart';
 import '../models/donation_model.dart';
 
 class DonationService {
@@ -27,7 +28,7 @@ class DonationService {
       String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      debugPrint('Firebase Storage failed, using Base64 fallback: $e');
+      AppErrorHandler.logError('DonationService.uploadImageFromBytes', e);
       // FALLBACK: Convert to Base64 and return as data URI
       String base64String = base64Encode(imageBytes);
       return 'data:image/jpeg;base64,$base64String';
@@ -44,7 +45,7 @@ class DonationService {
       String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
-      debugPrint('Error uploading image: $e');
+      AppErrorHandler.logError('DonationService.uploadImage', e);
       rethrow;
     }
   }
@@ -54,7 +55,7 @@ class DonationService {
     try {
       await _firestore.collection(_collection).doc(donation.id).set(donation.toMap());
     } catch (e) {
-      debugPrint('Error creating donation: $e');
+      AppErrorHandler.logError('DonationService.createDonation', e);
       rethrow;
     }
   }
@@ -79,7 +80,7 @@ class DonationService {
         'requests': FieldValue.arrayUnion([request.toMap()]),
       });
     } catch (e) {
-      debugPrint('Error requesting donation: $e');
+      AppErrorHandler.logError('DonationService.requestDonation', e);
       rethrow;
     }
   }
@@ -124,7 +125,7 @@ class DonationService {
         'requests': updatedRequests.map((r) => r.toMap()).toList(),
       });
     } catch (e) {
-      debugPrint('Error approving request: $e');
+      AppErrorHandler.logError('DonationService.approveRequest', e);
       rethrow;
     }
   }
@@ -157,7 +158,7 @@ class DonationService {
         'requests': updatedRequests.map((r) => r.toMap()).toList(),
       });
     } catch (e) {
-      debugPrint('Error rejecting request: $e');
+      AppErrorHandler.logError('DonationService.rejectRequest', e);
       rethrow;
     }
   }
@@ -169,7 +170,7 @@ class DonationService {
         'status': 'Dikirim',
       });
     } catch (e) {
-      debugPrint('Error marking as shipped: $e');
+      AppErrorHandler.logError('DonationService.markAsShipped', e);
       rethrow;
     }
   }
@@ -181,7 +182,7 @@ class DonationService {
         'status': 'Diterima',
       });
     } catch (e) {
-      debugPrint('Error marking as received: $e');
+      AppErrorHandler.logError('DonationService.markAsReceived', e);
       rethrow;
     }
   }
@@ -193,7 +194,7 @@ class DonationService {
         'status': 'Dibatalkan',
       });
     } catch (e) {
-      debugPrint('Error cancelling donation: $e');
+      AppErrorHandler.logError('DonationService.cancelDonation', e);
       rethrow;
     }
   }
@@ -206,7 +207,7 @@ class DonationService {
         'receiverId': receiverId,
       });
     } catch (e) {
-      debugPrint('Error claiming donation: $e');
+      AppErrorHandler.logError('DonationService.claimDonation', e);
       rethrow;
     }
   }
@@ -259,7 +260,7 @@ class DonationService {
     try {
       await _firestore.collection(_collection).doc(donationId).delete();
     } catch (e) {
-      debugPrint('Error deleting donation: $e');
+      AppErrorHandler.logError('DonationService.deleteDonation', e);
       rethrow;
     }
   }
