@@ -10,6 +10,7 @@ import '../widgets/radius_slider.dart';
 import '../widgets/empty_state.dart';
 import '../../../services/donation_service.dart';
 import '../../../services/auth_service.dart';
+import '../../../utils/app_error_handler.dart';
 import '../../../theme.dart';
 
 /// Layar utama Discovery Engine & Filtering
@@ -701,9 +702,7 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                   onPressed: isSending ? null : () async {
                   final message = messageController.text.trim();
                   if (message.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Pesan tidak boleh kosong')),
-                    );
+                    AppErrorHandler.showWarning(context, 'Pesan tidak boleh kosong');
                     return;
                   }
 
@@ -727,26 +726,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
 
                     if (context.mounted) {
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Permintaan berhasil dikirim! 🎉'),
-                          backgroundColor: AppTheme.successGreen,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      );
+                      AppErrorHandler.showSuccess(context, 'Permintaan berhasil dikirim! 🎉');
                     }
                   } catch (e) {
                     if (context.mounted) {
                       setDialogState(() => isSending = false);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Gagal mengirim: $e'),
-                          backgroundColor: AppTheme.errorRed,
-                        ),
-                      );
+                      AppErrorHandler.showError(context, e);
                     }
                   }
                 },

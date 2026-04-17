@@ -10,6 +10,7 @@ import 'screens/dashboard_screen.dart';
 import 'screens/add_donation_screen.dart';
 import 'screens/history_screen.dart';
 import 'modules/pencarian_area/providers/discovery_provider.dart';
+import 'utils/app_error_handler.dart';
 import 'theme.dart';
 
 void main() async {
@@ -17,7 +18,7 @@ void main() async {
   try {
     await Firebase.initializeApp();
   } catch (e) {
-    debugPrint('Firebase Initialization Error: $e');
+    AppErrorHandler.logError('Main.initialize', e);
   }
   runApp(const DonasikuApp());
 }
@@ -36,15 +37,29 @@ class DonasikuApp extends StatelessWidget {
         initialRoute: '/splash',
         builder: (context, widget) {
           ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
+            AppErrorHandler.logError('System.RenderError', errorDetails.exception, errorDetails.stack);
             return Scaffold(
               body: Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: SingleChildScrollView(
-                    child: Text(
-                      "Render Error: ${errorDetails.exception}\n\n${errorDetails.stack}",
-                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12),
-                    ),
+                  padding: const EdgeInsets.all(32.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.warning_amber_rounded, size: 64, color: AppTheme.errorRed),
+                      const SizedBox(height: 16),
+                      Text('Terjadi Kesalahan Tampilan', style: AppTheme.headingSmall),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Aplikasi mengalami kendala saat memuat antarmuka. Kami telah mencatat kejadian ini.',
+                        textAlign: TextAlign.center,
+                        style: AppTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pushReplacementNamed('/splash'),
+                        child: const Text('Muat Ulang Aplikasi'),
+                      ),
+                    ],
                   ),
                 ),
               ),

@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../theme.dart';
 import '../services/auth_service.dart';
 import '../services/donation_service.dart';
+import '../utils/app_error_handler.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -43,22 +44,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _handleRegister() async {
     if (_selectedRole == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Pilih role terlebih dahulu'),
-          backgroundColor: AppTheme.warningOrange,
-        ),
-      );
+      AppErrorHandler.showWarning(context, 'Pilih role terlebih dahulu');
       return;
     }
 
     if (_selectedRole == 'Penerima' && (_ktpFile == null || _sktmFile == null)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Harap unggah Foto KTP dan Bukti SKTM/Rumah'),
-          backgroundColor: AppTheme.warningOrange,
-        ),
-      );
+      AppErrorHandler.showWarning(context, 'Harap unggah Foto KTP dan Bukti SKTM/Rumah');
       return;
     }
 
@@ -87,23 +78,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
       }
-    } on FirebaseAuthException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message ?? 'Terjadi kesalahan'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
-      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Upload gagal: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        AppErrorHandler.showError(context, e);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils/app_error_handler.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -41,6 +42,7 @@ class AuthService {
 
       return userCredential;
     } catch (e) {
+      AppErrorHandler.logError('AuthService.signUp', e);
       rethrow;
     }
   }
@@ -57,6 +59,7 @@ class AuthService {
       );
       return userCredential;
     } catch (e) {
+      AppErrorHandler.logError('AuthService.signIn', e);
       rethrow;
     }
   }
@@ -81,7 +84,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      debugPrint('Error getting user role: $e');
+      AppErrorHandler.logError('AuthService.getUserRole', e);
       return null;
     }
   }
@@ -95,7 +98,7 @@ class AuthService {
       }
       return false;
     } catch (e) {
-      debugPrint('Error getting verification status: $e');
+      AppErrorHandler.logError('AuthService.getUserVerificationStatus', e);
       return false;
     }
   }
@@ -109,7 +112,7 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      debugPrint('Error getting user profile: $e');
+      AppErrorHandler.logError('AuthService.getUserProfile', e);
       return null;
     }
   }
@@ -143,7 +146,7 @@ class AuthService {
         await _firestore.collection('users').doc(uid).update(data);
       }
     } catch (e) {
-      debugPrint('Error updating user profile: $e');
+      AppErrorHandler.logError('AuthService.updateUserProfile', e);
       rethrow;
     }
   }
