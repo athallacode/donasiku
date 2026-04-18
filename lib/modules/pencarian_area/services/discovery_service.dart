@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/donation_item.dart';
 import '../models/category.dart';
 import '../utils/distance_calculator.dart';
-import '../utils/app_error_handler.dart';
+import '../../../utils/app_error_handler.dart';
 import 'mock_data.dart';
 
 /// Service layer untuk Discovery Engine
