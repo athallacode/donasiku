@@ -1,11 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../utils/app_error_handler.dart';
+import 'app_notification_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   // Sign Up
   Future<UserCredential?> signUp({
@@ -38,6 +41,12 @@ class AuthService {
           'photoUrl': '',
           'createdAt': FieldValue.serverTimestamp(),
         });
+
+        AppNotificationService().showInstantNotification(
+          id: 1,
+          title: 'Akun Berhasil Dibuat! 🎉',
+          body: 'Selamat bergabung di Donasiku, ${name.isNotEmpty ? name : email.split('@').first}.',
+        );
       }
 
       return userCredential;
@@ -57,6 +66,13 @@ class AuthService {
         email: email,
         password: password,
       );
+
+      AppNotificationService().showInstantNotification(
+        id: 2,
+        title: 'Selamat Datang Kembali! 👋',
+        body: 'Berbagi kebaikan dimulai dari sini.',
+      );
+
       return userCredential;
     } catch (e) {
       AppErrorHandler.logError('AuthService.signIn', e);
@@ -64,8 +80,77 @@ class AuthService {
     }
   }
 
+  // Reset Password
+  Future<void> resetPassword(String email) async {
+    try {
+      await _auth.setLanguageCode('id');
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      AppErrorHandler.logError('AuthService.resetPassword', e);
+      rethrow;
+    }
+  }
+
+  // Google Sign In
+  Future<UserCredential?> signInWithGoogle() async {
+    try {
+      // Trigger the authentication flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return null; // User cancelled
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // Create a new credential
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Once signed in, return the UserCredential
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+
+      // If new user, create a default Firestore profile
+      if (userCredential.additionalUserInfo?.isNewUser ?? false) {
+        final user = userCredential.user!;
+        await _firestore.collection('users').doc(user.uid).set({
+          'email': user.email ?? '',
+          'name': user.displayName ?? (user.email?.split('@').first ?? 'Pengguna'),
+          'role': 'Donatur', // Default role for Google login
+          'isVerified': true,
+          'ktpUrl': '',
+          'sktmUrl': '',
+          'phone': '',
+          'address': '',
+          'photoUrl': user.photoURL ?? '',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        AppNotificationService().showInstantNotification(
+          id: 10,
+          title: 'Selamat Datang! 🚀',
+          body: 'Pendaftaran via Google berhasil.',
+        );
+      } else {
+        AppNotificationService().showInstantNotification(
+          id: 11,
+          title: 'Login Berhasil! 👋',
+          body: 'Selamat datang kembali melalui Google.',
+        );
+      }
+
+      return userCredential;
+    } catch (e) {
+      AppErrorHandler.logError('AuthService.signInWithGoogle', e);
+      rethrow;
+    }
+  }
+
   // Sign Out
   Future<void> signOut() async {
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {}
     await _auth.signOut();
   }
 
@@ -149,15 +234,5 @@ class AuthService {
       AppErrorHandler.logError('AuthService.updateUserProfile', e);
       rethrow;
     }
-  }
-
-  // Stream user profile
-  Stream<Map<String, dynamic>?> streamUserProfile(String uid) {
-    return _firestore.collection('users').doc(uid).snapshots().map((doc) {
-      if (doc.exists) {
-        return doc.data() as Map<String, dynamic>;
-      }
-      return null;
-    });
   }
 }

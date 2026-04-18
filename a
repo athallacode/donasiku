@@ -1,0 +1,23 @@
+[33mcommit 7c3e58a92b829ac4ef5a00a0378ebe03ef562a9d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mnauval-dev[m[33m, [m[1;31morigin/nauval-dev[m[33m)[m
+Author: athallacode <naualysry12@gmail.com>
+Date:   Fri Apr 17 17:18:30 2026 +0700
+
+    Updated Error Handling
+
+[33mcommit a08e30a55cd367270db57cd3bf2200c72e4cd07d[m[33m ([m[1;31morigin/arfazrll-dev[m[33m, [m[1;32marfazrll-dev[m[33m)[m
+Author: Arfazrll <azril4974@gmail.com>
+Date:   Mon Apr 13 10:05:12 2026 +0700
+
+    feat: update project informations
+
+[33mcommit 1e4c5e7306db5c642699bed8d07ca8fa496ec456[m
+Author: Arfazrll <azril4974@gmail.com>
+Date:   Mon Apr 13 10:00:30 2026 +0700
+
+    feat: initiate project & update mvp feature
+
+[33mcommit f7d9f98f6499c0c2446dc5c31313eb17f48a2a38[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: athallacode <naualysry12@gmail.com>
+Date:   Sun Apr 12 14:55:33 2026 +0700
+
+    Initial commit: Donasiku completed application with Admin Verification flow

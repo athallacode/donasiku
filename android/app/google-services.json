@@ -12,7 +12,12 @@
           "package_name": "com.example.donasiku"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "217255226341-g5hd2jb23p2g6hh7gjg18gb5i560h4og.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB3NnKvYAZZcgxqsqlbzIDAfpSWBzYPyPs"
@@ -20,7 +25,41 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "217255226341-g5hd2jb23p2g6hh7gjg18gb5i560h4og.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:217255226341:android:18631c6ff5a4d0d36cdd0c",
+        "android_client_info": {
+          "package_name": "com.example.greenmaggot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "217255226341-g5hd2jb23p2g6hh7gjg18gb5i560h4og.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3NnKvYAZZcgxqsqlbzIDAfpSWBzYPyPs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "217255226341-g5hd2jb23p2g6hh7gjg18gb5i560h4og.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

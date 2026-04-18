@@ -53,38 +53,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
-    try {
-      String ktpUrl = '';
-      String sktmUrl = '';
+    await AppErrorHandler.performSafeAction(
+      context,
+      featureName: 'RegisterScreen.handleRegister',
+      loadingStateSetter: (v) => setState(() => _isLoading = v),
+      action: () async {
+        String ktpUrl = '';
+        String sktmUrl = '';
 
-      if (_selectedRole == 'Penerima') {
-        final ktpBytes = await _ktpFile!.readAsBytes();
-        ktpUrl = await _donationService.uploadImageFromBytes(ktpBytes);
+        if (_selectedRole == 'Penerima') {
+          final ktpBytes = await _ktpFile!.readAsBytes();
+          ktpUrl = await _donationService.uploadImageFromBytes(ktpBytes);
 
-        final sktmBytes = await _sktmFile!.readAsBytes();
-        sktmUrl = await _donationService.uploadImageFromBytes(sktmBytes);
-      }
+          final sktmBytes = await _sktmFile!.readAsBytes();
+          sktmUrl = await _donationService.uploadImageFromBytes(sktmBytes);
+        }
 
-      await _authService.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        role: _selectedRole!,
-        name: _nameController.text.trim(),
-        ktpUrl: ktpUrl,
-        sktmUrl: sktmUrl,
-      );
-      
-      if (mounted) {
-        Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
-      }
-    } catch (e) {
-      if (mounted) {
-        AppErrorHandler.showError(context, e);
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+        await _authService.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          role: _selectedRole!,
+          name: _nameController.text.trim(),
+          ktpUrl: ktpUrl,
+          sktmUrl: sktmUrl,
+        );
+        
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
+        }
+      },
+    );
+  }
+
+  void _handleGoogleLogin() async {
+    await AppErrorHandler.performSafeAction(
+      context,
+      featureName: 'RegisterScreen.handleGoogleLogin',
+      loadingStateSetter: (v) => setState(() => _isLoading = v),
+      action: () async {
+        final user = await _authService.signInWithGoogle();
+        if (user != null && mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
+        }
+      },
+    );
   }
 
   @override
@@ -121,88 +133,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
                 // Header
-                Text('Buat Akun', style: AppTheme.headingLarge),
+                Text('Daftar Akun', style: AppTheme.headingLarge),
                 const SizedBox(height: 8),
                 Text(
-                  'Bergabung untuk mulai berdonasi atau menerima',
+                  'Mulai perjalanan berbagi Anda hari ini',
                   style: AppTheme.bodyMedium.copyWith(fontSize: 15),
                 ),
 
                 const SizedBox(height: 32),
 
-                // Role selection
-                Text('Pilih Peran', style: AppTheme.labelBold),
-                const SizedBox(height: 12),
-                Row(
-                  children: _roles.map((role) {
-                    final isSelected = _selectedRole == role;
-                    final icon = role == 'Donatur'
-                        ? Icons.volunteer_activism_rounded
-                        : Icons.favorite_rounded;
-
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() {
-                          _selectedRole = role;
-                          _ktpFile = null;
-                          _sktmFile = null;
-                        }),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          margin: EdgeInsets.only(
-                            right: role == 'Donatur' ? 6 : 0,
-                            left: role == 'Penerima' ? 6 : 0,
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppTheme.primaryBlue
-                                : AppTheme.backgroundGrey,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppTheme.primaryBlue
-                                  : AppTheme.borderGrey,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Icon(icon,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : AppTheme.textLight,
-                                  size: 28),
-                              const SizedBox(height: 8),
-                              Text(
-                                role,
-                                style: AppTheme.labelBold.copyWith(
-                                  color: isSelected
-                                      ? Colors.white
-                                      : AppTheme.textGrey,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Name
+                // Name field
                 Text('Nama Lengkap', style: AppTheme.labelBold),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _nameController,
                   decoration: InputDecoration(
-                    hintText: 'Masukan nama lengkap',
+                    hintText: 'Nama Anda',
                     prefixIcon: Icon(Icons.person_outline_rounded,
                         color: AppTheme.textLight, size: 20),
                   ),
@@ -210,7 +159,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 20),
 
-                // Email
+                // Email field
                 Text('Email', style: AppTheme.labelBold),
                 const SizedBox(height: 8),
                 TextField(
@@ -225,14 +174,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 20),
 
-                // Password
+                // Password field
                 Text('Password', style: AppTheme.labelBold),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
-                    hintText: '••••••••',
+                    hintText: 'Minimal 6 karakter',
                     prefixIcon: Icon(Icons.lock_outline_rounded,
                         color: AppTheme.textLight, size: 20),
                     suffixIcon: GestureDetector(
@@ -248,39 +197,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
 
-                // Validation Files for Penerima
+                const SizedBox(height: 20),
+
+                // Role Dropdown
+                Text('Daftar Sebagai', style: AppTheme.labelBold),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.backgroundGrey,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedRole,
+                      hint: Text('Pilih Peran', style: AppTheme.bodyMedium),
+                      isExpanded: true,
+                      borderRadius: BorderRadius.circular(14),
+                      items: _roles.map((String role) {
+                        return DropdownMenuItem<String>(
+                          value: role,
+                          child: Text(role, style: AppTheme.bodyMedium),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() => _selectedRole = value);
+                      },
+                    ),
+                  ),
+                ),
+
                 if (_selectedRole == 'Penerima') ...[
-                  const SizedBox(height: 28),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.amber.withAlpha(15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.amber.withAlpha(50)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.info_outline_rounded, color: AppTheme.warningOrange, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text('Verifikasi Identitas', style: AppTheme.labelBold.copyWith(color: AppTheme.warningOrange))),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Mendaftar sebagai Penerima mewajibkan Anda melampirkan foto KTP dan Surat Keterangan Tidak Mampu (SKTM) / Bukti Rumah untuk diverifikasi oleh Admin.',
-                          style: AppTheme.bodySmall.copyWith(color: AppTheme.textDark),
-                        ),
-                        const SizedBox(height: 16),
-                        // KTP Uploader
-                        _buildImageUploader('Foto KTP', _ktpFile, () => _pickImage(true)),
-                        const SizedBox(height: 12),
-                        // SKTM Uploader
-                        _buildImageUploader('SKTM / Foto Rumah', _sktmFile, () => _pickImage(false)),
-                      ],
-                    ),
+                  const SizedBox(height: 24),
+                  Text('Dokumen Verifikasi', style: AppTheme.labelBold),
+                  const SizedBox(height: 12),
+                  _buildImageUploader('Foto KTP', _ktpFile, () => _pickImage(true)),
+                  const SizedBox(height: 12),
+                  _buildImageUploader('SKTM / Bukti Rumah', _sktmFile, () => _pickImage(false)),
+                  const SizedBox(height: 8),
+                  Text(
+                    '*Penerima wajib diverifikasi oleh Admin',
+                    style: AppTheme.bodySmall.copyWith(color: AppTheme.errorRed, fontSize: 11),
                   ),
                 ],
 
@@ -302,6 +259,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           )
                         : Text('Daftar', style: AppTheme.buttonText),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Separator
+                Row(
+                  children: [
+                    Expanded(child: Container(height: 1, color: AppTheme.borderGrey)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('Atau daftar dengan', style: AppTheme.bodySmall),
+                    ),
+                    Expanded(child: Container(height: 1, color: AppTheme.borderGrey)),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // Google Register button
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: OutlinedButton(
+                    onPressed: _isLoading ? null : _handleGoogleLogin,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppTheme.borderGrey),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/images/google_logo.png',
+                          height: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Google',
+                          style: AppTheme.labelBold.copyWith(color: AppTheme.textDark),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 

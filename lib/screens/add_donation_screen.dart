@@ -7,6 +7,7 @@ import '../models/donation_model.dart';
 import '../services/auth_service.dart';
 import '../services/donation_service.dart';
 import '../modules/pencarian_area/screens/location_picker_screen.dart';
+import '../services/app_notification_service.dart';
 import '../utils/app_error_handler.dart';
 import '../theme.dart';
 
@@ -170,46 +171,50 @@ class _AddDonationScreenState extends State<AddDonationScreen> {
       return;
     }
 
-    setState(() => _isLoading = true);
+    await AppErrorHandler.performSafeAction(
+      context,
+      featureName: 'AddDonationScreen.submitDonation',
+      loadingStateSetter: (loading) => setState(() => _isLoading = loading),
+      successMessage: 'Donasi berhasil dikirim! 🎉',
+      action: () async {
+        final user = _authService.currentUser;
+        if (user == null) throw Exception('Pengguna tidak ditemukan');
 
-    try {
-      final user = _authService.currentUser;
-      if (user == null) throw Exception('Pengguna tidak ditemukan');
+        final userName = await _authService.getUserName(user.uid);
 
-      final userName = await _authService.getUserName(user.uid);
+        // 1. Upload Image
+        final imageUrl = await _donationService.uploadImageFromBytes(_imageBytes!);
 
-      // 1. Upload Image
-      final imageUrl = await _donationService.uploadImageFromBytes(_imageBytes!);
+        // 2. Create Donation Object
+        final donation = Donation(
+          id: const Uuid().v4(),
+          donorId: user.uid,
+          donorName: userName,
+          productName: _nameController.text,
+          description: _descriptionController.text,
+          category: _selectedCategory!,
+          imageUrl: imageUrl,
+          location: _locationController.text,
+          createdAt: DateTime.now(),
+          latitude: _latitude,
+          longitude: _longitude,
+        );
 
-      // 2. Create Donation Object
-      final donation = Donation(
-        id: const Uuid().v4(),
-        donorId: user.uid,
-        donorName: userName,
-        productName: _nameController.text,
-        description: _descriptionController.text,
-        category: _selectedCategory!,
-        imageUrl: imageUrl,
-        location: _locationController.text,
-        createdAt: DateTime.now(),
-        latitude: _latitude,
-        longitude: _longitude,
-      );
+        // 3. Save to Firestore
+        await _donationService.createDonation(donation);
 
-      // 3. Save to Firestore
-      await _donationService.createDonation(donation);
+        // 4. Trigger Notification
+        AppNotificationService().showInstantNotification(
+          id: 3,
+          title: 'Donasi Terkirim! 📦',
+          body: 'Produk ${_nameController.text} sedang menunggu penerima yang tepat.',
+        );
 
-      if (mounted) {
-        AppErrorHandler.showSuccess(context, 'Donasi berhasil dikirim! 🎉');
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) {
-        AppErrorHandler.showError(context, e);
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+        if (context.mounted) {
+          Navigator.pop(context);
+        }
+      },
+    );
   }
 
   @override
