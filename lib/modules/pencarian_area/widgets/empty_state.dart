@@ -15,9 +15,10 @@ class EmptyStateWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
-        child: Column(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
+          child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Ilustrasi ikon
@@ -92,6 +93,7 @@ class EmptyStateWidget extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

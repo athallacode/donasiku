@@ -5,7 +5,6 @@ import '../theme.dart';
 import '../services/auth_service.dart';
 import '../services/donation_service.dart';
 import '../utils/app_error_handler.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
