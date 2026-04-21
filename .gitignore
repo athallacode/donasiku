@@ -63,3 +63,7 @@ flutter_*.log
 # Windows specific
 Thumb.db
 desktop.ini
+
+# Firebase configuration
+lib/firebase_options.dart
+a
