@@ -136,14 +136,18 @@ class DonationCard extends StatelessWidget {
                           color: AppTheme.emeraldGreen,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          item.distanceKm != null
-                              ? '${DiscoveryDistance.formatDistance(item.distanceKm!)} • ${item.donorCity}'
-                              : item.donorCity,
-                          style: AppTheme.bodySmall.copyWith(
-                            color: AppTheme.emeraldGreen,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
+                        Expanded(
+                          child: Text(
+                            item.distanceKm != null
+                                ? '${DiscoveryDistance.formatDistance(item.distanceKm!)} • ${item.donorCity}'
+                                : item.donorCity,
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.emeraldGreen,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
