@@ -7,7 +7,12 @@ import '../donation_detail_screen.dart';
 import '../../widgets/donation_image.dart';
 
 class ReceiverDashboard extends StatefulWidget {
-  const ReceiverDashboard({super.key});
+  final bool isPreviewMode;
+
+  const ReceiverDashboard({
+    super.key,
+    this.isPreviewMode = false,
+  });
 
   @override
   State<ReceiverDashboard> createState() => _ReceiverDashboardState();
@@ -163,6 +168,33 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                           ],
                         ),
                         const SizedBox(height: 24),
+                        if (widget.isPreviewMode) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: AppTheme.amber.withAlpha(15),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppTheme.amber.withAlpha(50)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.remove_red_eye_rounded, color: AppTheme.amber),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Akun Anda sedang diverifikasi. Anda bisa melihat halaman utama, tetapi belum bisa melakukan aksi apa pun.',
+                                    style: AppTheme.bodySmall.copyWith(
+                                      color: AppTheme.textDark,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
                         // Search Bar
                         Container(
                           decoration: BoxDecoration(
@@ -487,7 +519,10 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => DonationDetailScreen(donation: donation),
+            builder: (context) => DonationDetailScreen(
+              donation: donation,
+              isReadOnly: widget.isPreviewMode,
+            ),
           ),
         );
       },

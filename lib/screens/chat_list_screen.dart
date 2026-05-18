@@ -7,7 +7,12 @@ import 'chat_screen.dart';
 import 'package:intl/intl.dart';
 
 class ChatListScreen extends StatelessWidget {
-  const ChatListScreen({super.key});
+  final bool isPreviewMode;
+
+  const ChatListScreen({
+    super.key,
+    this.isPreviewMode = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +44,25 @@ class ChatListScreen extends StatelessWidget {
                         'Komunikasi dengan donatur atau penerima',
                         style: AppTheme.bodyMedium,
                       ),
+                      if (isPreviewMode) ...[
+                        const SizedBox(height: 14),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.amber.withAlpha(15),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppTheme.amber.withAlpha(45)),
+                          ),
+                          child: Text(
+                            'Mode preview aktif. Chat tetap bisa dibuka untuk dibaca, tetapi pengiriman pesan dinonaktifkan sampai verifikasi selesai.',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: AppTheme.textDark,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -90,7 +114,12 @@ class ChatListScreen extends StatelessWidget {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final room = chatRooms[index];
-                      return _buildChatRoomTile(context, room, user?.uid ?? '');
+                      return _buildChatRoomTile(
+                        context,
+                        room,
+                        user?.uid ?? '',
+                        isPreviewMode,
+                      );
                     },
                     childCount: chatRooms.length,
                   ),
@@ -104,7 +133,7 @@ class ChatListScreen extends StatelessWidget {
   }
 
   Widget _buildChatRoomTile(
-      BuildContext context, ChatRoom room, String currentUserId) {
+      BuildContext context, ChatRoom room, String currentUserId, bool isReadOnly) {
     final bool isDonor = room.donorId == currentUserId;
     final String otherName = isDonor ? room.receiverName : room.donorName;
     final String initials =
@@ -115,7 +144,10 @@ class ChatListScreen extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => ChatScreen(chatRoom: room),
+            builder: (context) => ChatScreen(
+              chatRoom: room,
+              isReadOnly: isReadOnly,
+            ),
           ),
         );
       },

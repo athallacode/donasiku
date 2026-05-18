@@ -5,7 +5,12 @@ import '../utils/app_error_handler.dart';
 import 'history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final bool isPreviewMode;
+
+  const ProfileScreen({
+    super.key,
+    this.isPreviewMode = false,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -109,15 +114,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Profil Saya', style: AppTheme.headingLarge.copyWith(fontSize: 24)),
-                          IconButton(
-                            icon: Icon(
-                              _isEditing ? Icons.close_rounded : Icons.edit_rounded,
-                              color: AppTheme.textDark,
+                          if (!widget.isPreviewMode)
+                            IconButton(
+                              icon: Icon(
+                                _isEditing ? Icons.close_rounded : Icons.edit_rounded,
+                                color: AppTheme.textDark,
+                              ),
+                              onPressed: () {
+                                setState(() => _isEditing = !_isEditing);
+                              },
                             ),
-                            onPressed: () {
-                              setState(() => _isEditing = !_isEditing);
-                            },
-                          ),
                         ],
                       ),
                       const SizedBox(height: 32),
@@ -175,6 +181,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
+                  if (widget.isPreviewMode) ...[
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppTheme.amber.withAlpha(15),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.amber.withAlpha(50)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.lock_outline_rounded, color: AppTheme.amber),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Profil masih dalam mode preview. Edit profil akan aktif setelah akun Anda diverifikasi.',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.textDark,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   // Info Cards
                   if (!_isEditing) ...[
                     _buildInfoCard(

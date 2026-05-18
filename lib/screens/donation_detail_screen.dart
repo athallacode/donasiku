@@ -10,8 +10,13 @@ import 'package:intl/intl.dart';
 
 class DonationDetailScreen extends StatefulWidget {
   final Donation donation;
+  final bool isReadOnly;
 
-  const DonationDetailScreen({super.key, required this.donation});
+  const DonationDetailScreen({
+    super.key,
+    required this.donation,
+    this.isReadOnly = false,
+  });
 
   @override
   State<DonationDetailScreen> createState() => _DonationDetailScreenState();
@@ -149,10 +154,14 @@ class _DonationDetailScreenState extends State<DonationDetailScreen> {
     final bool alreadyRequested = widget.donation.requests
         .any((r) => r.requesterId == user?.uid);
     final bool canRequest =
-        !isDonor && widget.donation.status == 'Tersedia' && !alreadyRequested;
+        !widget.isReadOnly &&
+        !isDonor &&
+        widget.donation.status == 'Tersedia' &&
+        !alreadyRequested;
     final bool canChat = (widget.donation.status == 'Diproses' ||
         widget.donation.status == 'Dikirim') &&
-        (widget.donation.receiverName ?? '').isNotEmpty;
+        (widget.donation.receiverName ?? '').isNotEmpty &&
+        !widget.isReadOnly;
 
     return Scaffold(
       backgroundColor: AppTheme.backgroundGrey,
@@ -386,6 +395,35 @@ class _DonationDetailScreenState extends State<DonationDetailScreen> {
                             Expanded(
                               child: Text(
                                 'Anda sudah mengirim permintaan untuk donasi ini. Tunggu konfirmasi dari donatur.',
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: AppTheme.textDark,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    if (widget.isReadOnly) ...[
+                      const SizedBox(height: 24),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.amber.withAlpha(15),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                              color: AppTheme.amber.withAlpha(70)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.lock_clock_rounded,
+                                color: AppTheme.amber, size: 24),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Preview aktif. Akun penerima Anda masih diverifikasi sehingga permintaan dan chat belum tersedia.',
                                 style: AppTheme.bodyMedium.copyWith(
                                   color: AppTheme.textDark,
                                 ),
