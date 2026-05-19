@@ -3,7 +3,7 @@ import '../services/auth_service.dart';
 import 'dashboards/donor_dashboard.dart';
 import 'dashboards/receiver_dashboard.dart';
 import 'dashboards/admin_dashboard.dart';
-import 'pending_verification_screen.dart';
+import 'auth/pending_verification_screen.dart';
 import 'tracking_screen.dart';
 import 'chat_list_screen.dart';
 import 'profile_screen.dart';
