@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../theme.dart';
-import '../services/auth_service.dart';
-import '../services/donation_service.dart';
-import '../utils/app_error_handler.dart';
+import 'package:donasiku/theme.dart';
+import 'package:donasiku/services/auth_service.dart';
+import 'package:donasiku/services/donation_service.dart';
+import 'package:donasiku/utils/app_error_handler.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

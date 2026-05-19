@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../theme.dart';
-import '../services/auth_service.dart';
-import '../utils/app_error_handler.dart';
+import 'package:donasiku/theme.dart';
+import 'package:donasiku/services/auth_service.dart';
+import 'package:donasiku/utils/app_error_handler.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
