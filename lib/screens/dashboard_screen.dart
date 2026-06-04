@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../utils/app_error_handler.dart';
 import 'dashboards/donor_dashboard.dart';
 import 'dashboards/receiver_dashboard.dart';
 import 'dashboards/admin_dashboard.dart';
@@ -32,6 +33,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _fetchUserRoleAndVerification() async {
+    if (_authService.isGuest) {
+      if (mounted) {
+        setState(() {
+          _role = 'Guest';
+          _isVerified = false;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
+
     final user = _authService.currentUser;
     if (user != null) {
       final role = await _authService.getUserRole(user.uid);
@@ -40,6 +52,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           _role = role;
           _isVerified = isVerified;
+          _isLoading = false;
+        });
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _role = null;
           _isLoading = false;
         });
       }
@@ -60,25 +79,79 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     if (_role == null) {
+      final isOrphaned = _authService.currentUser != null && !_authService.isGuest;
       return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline_rounded, size: 64, color: AppTheme.errorRed),
-              const SizedBox(height: 16),
-              Text('Terjadi kesalahan', style: AppTheme.headingSmall),
-              const SizedBox(height: 8),
-              Text('Tidak dapat memuat peran pengguna', style: AppTheme.bodyMedium),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () async {
-                  await _authService.signOut();
-                  if (context.mounted) Navigator.pushReplacementNamed(context, '/login');
-                },
-                child: const Text('Keluar'),
+        backgroundColor: AppTheme.white,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isOrphaned ? Icons.account_circle_outlined : Icons.error_outline_rounded,
+                    size: 72,
+                    color: isOrphaned ? AppTheme.primaryBlue : AppTheme.errorRed,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    isOrphaned ? 'Profil Belum Lengkap' : 'Terjadi Kesalahan',
+                    style: AppTheme.headingSmall.copyWith(fontSize: 20),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    isOrphaned
+                        ? 'Akun Anda terdaftar tetapi profil data belum terbuat karena kendala sebelumnya. Silakan bersihkan akun ini untuk mendaftar kembali.'
+                        : 'Tidak dapat memuat peran pengguna.',
+                    textAlign: TextAlign.center,
+                    style: AppTheme.bodyMedium.copyWith(color: AppTheme.textGrey, height: 1.4),
+                  ),
+                  const SizedBox(height: 32),
+                  if (isOrphaned) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          await AppErrorHandler.performSafeAction(
+                            context,
+                            featureName: 'DashboardScreen.resetOrphanedAccount',
+                            action: () async {
+                              await _authService.deleteCurrentUser();
+                              if (context.mounted) {
+                                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                              }
+                            },
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryBlue,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: const Text('Reset Akun & Daftar Baru'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        await _authService.signOut();
+                        if (context.mounted) Navigator.pushReplacementNamed(context, '/login');
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.borderGrey),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text('Keluar', style: TextStyle(color: AppTheme.textDark)),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       );
@@ -87,6 +160,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Role Handling
     if (_role == 'Admin') {
       return const AdminDashboard();
+    }
+
+    if (_role == 'Guest') {
+      return const DiscoveryScreen(
+        userRole: UserRole.guest,
+        isLocationVerified: false,
+      );
     }
 
     if (_role == 'Penerima' && !_isVerified) {

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -18,17 +19,19 @@ class AuthService {
     String? ktpUrl,
     String? sktmUrl,
   }) async {
+    User? createdUser;
     try {
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+      createdUser = userCredential.user;
 
       // Save role and profile to Firestore
-      if (userCredential.user != null) {
-        bool isVerified = role == 'Donatur' || role == 'Admin';
+      if (createdUser != null) {
+        bool isVerified = false;
 
-        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        await _firestore.collection('users').doc(createdUser.uid).set({
           'email': email,
           'name': name.isNotEmpty ? name : email.split('@').first,
           'role': role,
@@ -50,6 +53,14 @@ class AuthService {
 
       return userCredential;
     } catch (e) {
+      // If Firestore write fails, clean up the created Firebase Auth user to avoid orphan accounts
+      if (createdUser != null) {
+        try {
+          await createdUser.delete();
+        } catch (cleanupError) {
+          debugPrint('Failed to clean up created user after Firestore failure: $cleanupError');
+        }
+      }
       AppErrorHandler.logError('AuthService.signUp', e);
       rethrow;
     }
@@ -116,7 +127,7 @@ class AuthService {
           'email': user.email ?? '',
           'name': user.displayName ?? (user.email?.split('@').first ?? 'Pengguna'),
           'role': 'Donatur', // Default role for Google login
-          'isVerified': true,
+          'isVerified': false,
           'ktpUrl': '',
           'sktmUrl': '',
           'phone': '',
@@ -145,12 +156,48 @@ class AuthService {
     }
   }
 
+  // Sign In Anonymously (Guest)
+  Future<UserCredential?> signInAnonymously() async {
+    try {
+      return await _auth.signInAnonymously();
+    } catch (e) {
+      AppErrorHandler.logError('AuthService.signInAnonymously', e);
+      rethrow;
+    }
+  }
+
+  bool get isGuest => _auth.currentUser?.isAnonymous ?? false;
+
   // Sign Out
   Future<void> signOut() async {
+    final user = _auth.currentUser;
     try {
       await _googleSignIn.signOut();
     } catch (_) {}
+    // Anonymous accounts must be deleted, not just signed out, to avoid
+    // accumulating orphaned guest accounts in Firebase Auth indefinitely.
+    if (user?.isAnonymous == true) {
+      try {
+        await user!.delete();
+        return; // Firebase auto-signs out on delete
+      } catch (_) {}
+    }
     await _auth.signOut();
+  }
+
+  // Delete current authenticated user (useful for cleaning up orphaned accounts)
+  Future<void> deleteCurrentUser() async {
+    try {
+      await _auth.currentUser?.delete();
+      // Firebase Auth automatically signs out the user on delete.
+      // Still clear Google Sign-In session in case it was a Google account.
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
+    } catch (e) {
+      AppErrorHandler.logError('AuthService.deleteCurrentUser', e);
+      rethrow;
+    }
   }
 
   // Get Current User
@@ -161,6 +208,7 @@ class AuthService {
 
   // Get User Role from Firestore
   Future<String?> getUserRole(String uid) async {
+    if (isGuest) return 'Guest';
     try {
       DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists) {
@@ -175,6 +223,7 @@ class AuthService {
 
   // Get User Verification Status
   Future<bool> getUserVerificationStatus(String uid) async {
+    if (isGuest) return false;
     try {
       DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists) {
@@ -189,6 +238,17 @@ class AuthService {
 
   // Get full user profile
   Future<Map<String, dynamic>?> getUserProfile(String uid) async {
+    if (isGuest) {
+      return {
+        'name': 'Tamu',
+        'email': 'tamu@donasiku.com',
+        'role': 'Guest',
+        'isVerified': false,
+        'phone': '',
+        'address': '',
+        'photoUrl': '',
+      };
+    }
     try {
       DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists) {
@@ -203,6 +263,7 @@ class AuthService {
 
   // Get user name
   Future<String> getUserName(String uid) async {
+    if (isGuest) return 'Tamu';
     try {
       final profile = await getUserProfile(uid);
       return profile?['name'] ?? 'Pengguna';
@@ -219,6 +280,7 @@ class AuthService {
     String? address,
     String? photoUrl,
   }) async {
+    if (isGuest) throw Exception('Tamu tidak dapat memperbarui profil');
     try {
       final Map<String, dynamic> data = {};
       if (name != null) data['name'] = name;
