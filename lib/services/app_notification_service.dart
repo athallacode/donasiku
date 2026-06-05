@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/foundation.dart';
+import 'auth_service.dart';
 import 'dart:io';
 
 class AppNotificationService {
@@ -10,6 +12,9 @@ class AppNotificationService {
   AppNotificationService._internal();
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static String? pendingPayload;
 
   static const String channelId = 'donasiku_channel';
   static const String channelName = 'Donasiku Notifications';
@@ -36,8 +41,25 @@ class AppNotificationService {
       settings,
       onDidReceiveNotificationResponse: (NotificationResponse details) {
         debugPrint('Notification clicked: ${details.payload}');
+        if (details.payload != null && details.payload!.isNotEmpty) {
+          _handleNotificationClick(details.payload!);
+        }
       },
     );
+
+    // Check if launched from terminated state
+    try {
+      final NotificationAppLaunchDetails? launchDetails =
+          await _notificationsPlugin.getNotificationAppLaunchDetails();
+      if (launchDetails != null && launchDetails.didNotificationLaunchApp) {
+        final NotificationResponse? response = launchDetails.notificationResponse;
+        if (response != null && response.payload != null && response.payload!.isNotEmpty) {
+          pendingPayload = response.payload;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error getting notification launch details: $e');
+    }
 
     // Create high importance channel for Android
     if (Platform.isAndroid) {
@@ -51,6 +73,17 @@ class AppNotificationService {
             playSound: true,
             enableVibration: true,
           ));
+    }
+  }
+
+  void _handleNotificationClick(String payload) {
+    final context = navigatorKey.currentContext;
+    if (context != null) {
+      final authService = AuthService();
+      if (authService.currentUser != null) {
+        // Safe navigation if user is logged in
+        navigatorKey.currentState?.pushNamed(payload);
+      }
     }
   }
 
@@ -109,6 +142,7 @@ class AppNotificationService {
           importance: Importance.low,
         ),
       ),
+      payload: '/dashboard',
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,

@@ -208,6 +208,7 @@ class _AddDonationScreenState extends State<AddDonationScreen> {
           id: 3,
           title: 'Donasi Terkirim! 📦',
           body: 'Produk ${_nameController.text} sedang menunggu penerima yang tepat.',
+          payload: '/history',
         );
 
         if (mounted) {

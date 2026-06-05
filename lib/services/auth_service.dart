@@ -48,6 +48,7 @@ class AuthService {
           id: 1,
           title: 'Akun Berhasil Dibuat! 🎉',
           body: 'Selamat bergabung di Donasiku, ${name.isNotEmpty ? name : email.split('@').first}.',
+          payload: '/dashboard',
         );
       }
 
@@ -81,6 +82,7 @@ class AuthService {
         id: 2,
         title: 'Selamat Datang Kembali! 👋',
         body: 'Berbagi kebaikan dimulai dari sini.',
+        payload: '/dashboard',
       );
 
       return userCredential;
@@ -140,12 +142,14 @@ class AuthService {
           id: 10,
           title: 'Selamat Datang! 🚀',
           body: 'Pendaftaran via Google berhasil.',
+          payload: '/dashboard',
         );
       } else {
         AppNotificationService().showInstantNotification(
           id: 11,
           title: 'Login Berhasil! 👋',
           body: 'Selamat datang kembali melalui Google.',
+          payload: '/dashboard',
         );
       }
 
