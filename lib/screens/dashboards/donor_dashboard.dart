@@ -3,7 +3,6 @@ import '../../theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/donation_service.dart';
 import '../../models/donation_model.dart';
-import '../donation_detail_screen.dart';
 import '../donation_management_screen.dart';
 import '../../widgets/donation_image.dart';
 
@@ -484,9 +483,7 @@ class _DonorDashboardState extends State<DonorDashboard> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => hasRequests
-                ? DonationManagementScreen(donation: donation)
-                : DonationDetailScreen(donation: donation),
+            builder: (context) => DonationManagementScreen(donation: donation),
           ),
         );
       },

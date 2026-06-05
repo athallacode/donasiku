@@ -264,4 +264,26 @@ class DonationService {
       rethrow;
     }
   }
+
+  // Update Donation Document
+  Future<void> updateDonation(Donation donation) async {
+    try {
+      await _firestore.collection(_collection).doc(donation.id).update(donation.toMap());
+    } catch (e) {
+      AppErrorHandler.logError('DonationService.updateDonation', e);
+      rethrow;
+    }
+  }
+
+  // Stream of a specific donation
+  Stream<Donation?> getDonationStream(String donationId) {
+    return _firestore
+        .collection(_collection)
+        .doc(donationId)
+        .snapshots()
+        .map((snapshot) {
+      if (!snapshot.exists) return null;
+      return Donation.fromMap(snapshot.data()!);
+    });
+  }
 }
