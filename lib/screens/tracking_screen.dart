@@ -154,6 +154,7 @@ class _TrackingCard extends StatelessWidget {
                   height: 56,
                   width: 56,
                   fit: BoxFit.cover,
+                  cacheWidth: 150,
                   errorWidget: Container(
                     height: 56,
                     width: 56,

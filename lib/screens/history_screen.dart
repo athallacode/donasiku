@@ -364,6 +364,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 height: 90,
                 width: 90,
                 fit: BoxFit.cover,
+                cacheWidth: 200,
                 errorWidget: Container(
                   height: 90,
                   width: 90,

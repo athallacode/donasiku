@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "217255226341-195l8vhvs4ohhhieoiengaool7k542bq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.donasiku",
+            "certificate_hash": "4a6573bae4beb3d09645e533120408ea4bf5a107"
+          }
+        },
+        {
           "client_id": "217255226341-g5hd2jb23p2g6hh7gjg18gb5i560h4og.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -170,6 +170,7 @@ class _DonationDetailScreenState extends State<DonationDetailScreen> {
                 child: DonationImage(
                   imageUrl: widget.donation.imageUrl,
                   fit: BoxFit.cover,
+                  cacheWidth: 800,
                   errorWidget: Container(
                     color: AppTheme.paleBlue,
                     child: const Center(

@@ -5,7 +5,6 @@ import '../theme.dart';
 import '../services/auth_service.dart';
 import '../services/donation_service.dart';
 import '../utils/app_error_handler.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -79,7 +78,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
         
         if (mounted) {
-          Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
+          // Penerima belum diverifikasi, arahkan ke halaman pending
+          if (_selectedRole == 'Penerima') {
+            Navigator.pushNamedAndRemoveUntil(context, '/pending-verification', (route) => false);
+          } else {
+            Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
+          }
         }
       },
     );

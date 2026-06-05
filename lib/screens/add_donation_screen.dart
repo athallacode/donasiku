@@ -210,7 +210,7 @@ class _AddDonationScreenState extends State<AddDonationScreen> {
           body: 'Produk ${_nameController.text} sedang menunggu penerima yang tepat.',
         );
 
-        if (context.mounted) {
+        if (mounted) {
           Navigator.pop(context);
         }
       },

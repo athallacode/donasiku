@@ -45,6 +45,7 @@ class DonationManagementScreen extends StatelessWidget {
                     height: 100,
                     width: 100,
                     fit: BoxFit.cover,
+                    cacheWidth: 200,
                     errorWidget: Container(
                       height: 100,
                       width: 100,

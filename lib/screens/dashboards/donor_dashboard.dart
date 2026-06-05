@@ -507,6 +507,7 @@ class _DonorDashboardState extends State<DonorDashboard> {
                 height: 130,
                 width: 120,
                 fit: BoxFit.cover,
+                cacheWidth: 300, // resize di memory, hemat RAM untuk thumbnail
                 errorWidget: Container(
                   height: 130,
                   width: 120,
@@ -522,53 +523,62 @@ class _DonorDashboardState extends State<DonorDashboard> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Title + Status
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Text(
-                            donation.productName,
-                            style: AppTheme.labelBold.copyWith(fontSize: 15),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                donation.productName,
+                                style: AppTheme.headingSmall.copyWith(fontSize: 16),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Icon(Icons.category_outlined, size: 14, color: AppTheme.primaryBlue),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    donation.category,
+                                    style: AppTheme.bodySmall.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.primaryBlue,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _getStatusColor(donation.status).withAlpha(30),
-                            borderRadius: BorderRadius.circular(6),
+                            color: _getStatusColor(donation.status).withAlpha(20),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                               color: _getStatusColor(donation.status).withAlpha(50),
+                            ),
                           ),
                           child: Text(
                             donation.status,
                             style: AppTheme.bodySmall.copyWith(
                               color: _getStatusColor(donation.status),
-                              fontSize: 9,
+                              fontSize: 10,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    // Category
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.backgroundGrey,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        donation.category,
-                        style: AppTheme.bodySmall.copyWith(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textDark,
-                        ),
-                      ),
-                    ),
+                    const SizedBox(height: 12),
+                    Divider(color: AppTheme.borderGrey, height: 1),
                     const SizedBox(height: 12),
                     // Location + Date
                     Row(
@@ -579,7 +589,7 @@ class _DonorDashboardState extends State<DonorDashboard> {
                         Expanded(
                           child: Text(
                             donation.location,
-                            style: AppTheme.bodySmall.copyWith(fontSize: 11),
+                            style: AppTheme.bodySmall.copyWith(fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
