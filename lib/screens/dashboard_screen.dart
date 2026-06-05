@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'dashboards/donor_dashboard.dart';
 import 'dashboards/receiver_dashboard.dart';
-import 'dashboards/admin_dashboard.dart';
 import 'pending_verification_screen.dart';
 import 'tracking_screen.dart';
 import 'chat_list_screen.dart';
@@ -65,16 +64,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline_rounded, size: 64, color: AppTheme.errorRed),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: AppTheme.errorRed,
+              ),
               const SizedBox(height: 16),
               Text('Terjadi kesalahan', style: AppTheme.headingSmall),
               const SizedBox(height: 8),
-              Text('Tidak dapat memuat peran pengguna', style: AppTheme.bodyMedium),
+              Text(
+                'Tidak dapat memuat peran pengguna',
+                style: AppTheme.bodyMedium,
+              ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () async {
                   await _authService.signOut();
-                  if (context.mounted) Navigator.pushReplacementNamed(context, '/login');
+                  if (context.mounted)
+                    Navigator.pushReplacementNamed(context, '/login');
                 },
                 child: const Text('Keluar'),
               ),
@@ -85,9 +92,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     // Role Handling
-    if (_role == 'Admin') {
-      return const AdminDashboard();
-    }
 
     if (_role == 'Penerima' && !_isVerified) {
       return const PendingVerificationScreen();
@@ -176,10 +180,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
