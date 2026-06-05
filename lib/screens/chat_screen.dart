@@ -1,8 +1,13 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../theme.dart';
 import '../models/chat_model.dart';
 import '../services/chat_service.dart';
 import '../services/auth_service.dart';
+import '../utils/app_error_handler.dart';
 import 'package:intl/intl.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -24,34 +29,266 @@ class _ChatScreenState extends State<ChatScreen> {
   final AuthService _authService = AuthService();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ImagePicker _picker = ImagePicker();
+
+  Uint8List? _selectedImageBytes;
+  File? _selectedImageFile;
+  bool _isSending = false;
 
   void _sendMessage() async {
     final text = _messageController.text.trim();
-    if (text.isEmpty) return;
+    final hasImage = _selectedImageBytes != null;
+    if (text.isEmpty && !hasImage) return;
 
     final user = _authService.currentUser;
     if (user == null) return;
 
     final userName = await _authService.getUserName(user.uid);
-    _messageController.clear();
+    
+    setState(() {
+      _isSending = true;
+    });
 
-    await _chatService.sendMessage(
-      chatRoomId: widget.chatRoom.id,
-      senderId: user.uid,
-      senderName: userName,
-      text: text,
+    try {
+      String? imageUrl;
+      if (hasImage) {
+        imageUrl = await _chatService.uploadChatImage(_selectedImageBytes!);
+      }
+
+      _messageController.clear();
+      setState(() {
+        _selectedImageBytes = null;
+        _selectedImageFile = null;
+      });
+
+      await _chatService.sendMessage(
+        chatRoomId: widget.chatRoom.id,
+        senderId: user.uid,
+        senderName: userName,
+        text: text,
+        imageUrl: imageUrl,
+      );
+
+      // Scroll to bottom
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        AppErrorHandler.showError(context, e);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: source,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        imageQuality: 50,
+      );
+      if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
+        setState(() {
+          _selectedImageFile = File(pickedFile.path);
+          _selectedImageBytes = bytes;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        AppErrorHandler.showError(context, e);
+      }
+    }
+  }
+
+  void _showImagePicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppTheme.borderGrey,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text('Kirim Gambar / Foto', style: AppTheme.headingSmall),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildPickerOption(
+                        icon: Icons.photo_library_outlined,
+                        label: 'Galeri',
+                        color: AppTheme.primaryBlue,
+                        onTap: () {
+                          _pickImage(ImageSource.gallery);
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildPickerOption(
+                        icon: Icons.camera_alt_outlined,
+                        label: 'Kamera',
+                        color: AppTheme.emeraldGreen,
+                        onTap: () {
+                          _pickImage(ImageSource.camera);
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
     );
+  }
 
-    // Scroll to bottom
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
+  Widget _buildPickerOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: color.withAlpha(15),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withAlpha(40)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 36),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: AppTheme.labelBold.copyWith(color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatImage(String imageUrl, {double? width, double? height, BoxFit fit = BoxFit.cover}) {
+    if (imageUrl.startsWith('data:image')) {
+      try {
+        final base64Data = imageUrl.split(',').last;
+        final bytes = base64Decode(base64Data);
+        return Image.memory(
+          bytes,
+          fit: fit,
+          width: width,
+          height: height,
+        );
+      } catch (_) {
+        return Container(
+          width: width,
+          height: height,
+          color: Colors.black12,
+          child: const Center(
+            child: Icon(Icons.broken_image_rounded, color: Colors.grey),
+          ),
         );
       }
-    });
+    }
+
+    return Image.network(
+      imageUrl,
+      fit: fit,
+      width: width,
+      height: height,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          width: width,
+          height: height,
+          color: Colors.black12,
+          child: const Center(
+            child: CircularProgressIndicator(
+              color: AppTheme.primaryBlue,
+            ),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          width: width,
+          height: height,
+          color: Colors.black12,
+          child: const Center(
+            child: Icon(Icons.broken_image_rounded, color: Colors.grey),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showFullScreenImage(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            InteractiveViewer(
+              child: _buildChatImage(
+                imageUrl,
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.contain,
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: CircleAvatar(
+                backgroundColor: Colors.black54,
+                child: IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -238,6 +475,70 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
 
+          // Image Preview (if selected)
+          if (_selectedImageFile != null && !widget.isReadOnly)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppTheme.white,
+                border: const Border(
+                  top: BorderSide(color: AppTheme.borderGrey),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          _selectedImageFile!,
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedImageFile = null;
+                              _selectedImageBytes = null;
+                            });
+                          },
+                          child: CircleAvatar(
+                            radius: 10,
+                            backgroundColor: Colors.black54,
+                            child: const Icon(
+                              Icons.close_rounded,
+                              size: 12,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Gambar siap dikirim...',
+                      style: AppTheme.bodySmall.copyWith(color: AppTheme.textLight),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Sending progress bar
+          if (_isSending)
+            const LinearProgressIndicator(
+              color: AppTheme.primaryBlue,
+              backgroundColor: AppTheme.paleBlue,
+            ),
+
           // Input Bar
           if (!widget.isReadOnly)
             Container(
@@ -252,6 +553,13 @@ class _ChatScreenState extends State<ChatScreen> {
                 top: false,
                 child: Row(
                   children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.add_photo_alternate_rounded,
+                        color: AppTheme.primaryBlue,
+                      ),
+                      onPressed: _isSending ? null : _showImagePicker,
+                    ),
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
@@ -260,6 +568,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                         child: TextField(
                           controller: _messageController,
+                          enabled: !_isSending,
                           textCapitalization: TextCapitalization.sentences,
                           maxLines: 4,
                           minLines: 1,
@@ -279,13 +588,22 @@ class _ChatScreenState extends State<ChatScreen> {
                     const SizedBox(width: 8),
                     Container(
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryBlue,
+                        color: _isSending ? Colors.grey : AppTheme.primaryBlue,
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: IconButton(
-                        onPressed: _sendMessage,
-                        icon: const Icon(Icons.send_rounded,
-                            color: Colors.white, size: 20),
+                        onPressed: _isSending ? null : _sendMessage,
+                        icon: _isSending
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.send_rounded,
+                                color: Colors.white, size: 20),
                       ),
                     ),
                   ],
@@ -298,6 +616,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildMessageBubble(ChatMessage message, bool isMe) {
+    final hasImage = message.imageUrl != null && message.imageUrl!.isNotEmpty;
+
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -325,13 +645,28 @@ class _ChatScreenState extends State<ChatScreen> {
           crossAxisAlignment:
               isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            Text(
-              message.text,
-              style: AppTheme.bodyMedium.copyWith(
-                color: isMe ? Colors.white : AppTheme.textDark,
-                fontSize: 14,
+            if (hasImage) ...[
+              GestureDetector(
+                onTap: () => _showFullScreenImage(context, message.imageUrl!),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: _buildChatImage(
+                    message.imageUrl!,
+                    width: 200,
+                    height: 200,
+                  ),
+                ),
               ),
-            ),
+              if (message.text.isNotEmpty) const SizedBox(height: 8),
+            ],
+            if (message.text.isNotEmpty)
+              Text(
+                message.text,
+                style: AppTheme.bodyMedium.copyWith(
+                  color: isMe ? Colors.white : AppTheme.textDark,
+                  fontSize: 14,
+                ),
+              ),
             const SizedBox(height: 6),
             Text(
               DateFormat('HH:mm').format(message.timestamp),
