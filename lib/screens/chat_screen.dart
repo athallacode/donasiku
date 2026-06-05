@@ -9,6 +9,7 @@ import '../services/chat_service.dart';
 import '../services/auth_service.dart';
 import '../utils/app_error_handler.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatRoom chatRoom;
@@ -226,25 +227,22 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
 
-    return Image.network(
-      imageUrl,
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
       fit: fit,
       width: width,
       height: height,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return Container(
-          width: width,
-          height: height,
-          color: Colors.black12,
-          child: const Center(
-            child: CircularProgressIndicator(
-              color: AppTheme.primaryBlue,
-            ),
+      placeholder: (context, url) => Container(
+        width: width,
+        height: height,
+        color: Colors.black12,
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: AppTheme.primaryBlue,
           ),
-        );
-      },
-      errorBuilder: (context, error, stackTrace) {
+        ),
+      ),
+      errorWidget: (context, url, error) {
         return Container(
           width: width,
           height: height,

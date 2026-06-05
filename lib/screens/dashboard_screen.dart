@@ -187,11 +187,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ]
         : [
             ReceiverDashboard(isPreviewMode: isPreviewMode),
-            DiscoveryScreen(
-              userRole: userRole,
-              isLocationVerified: _isVerified,
-              isPreviewMode: isPreviewMode,
-            ),
             TrackingScreen(isPreviewMode: isPreviewMode),
             ChatListScreen(isPreviewMode: isPreviewMode),
             ProfileScreen(isPreviewMode: isPreviewMode),
@@ -230,11 +225,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               icon: Icon(Icons.explore_outlined),
               activeIcon: Icon(Icons.explore_rounded),
               label: 'Jelajahi',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.search_outlined),
-              activeIcon: Icon(Icons.search_rounded),
-              label: 'Cari',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.local_shipping_outlined),

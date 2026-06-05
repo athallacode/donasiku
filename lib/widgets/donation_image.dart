@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class DonationImage extends StatelessWidget {
   final String imageUrl;
@@ -38,13 +39,16 @@ class DonationImage extends StatelessWidget {
       }
     }
 
-    return Image.network(
-      imageUrl,
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
       height: height,
       width: width,
       fit: fit,
-      errorBuilder: (context, error, stackTrace) =>
+      errorWidget: (context, url, error) =>
           errorWidget ?? const Center(child: Icon(Icons.broken_image)),
+      placeholder: (context, url) => const Center(
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
     );
   }
 }
