@@ -6,6 +6,7 @@ import '../models/donation_item.dart';
 import '../models/category.dart';
 import '../services/discovery_service.dart';
 import '../services/mock_data.dart';
+import '../utils/distance_calculator.dart';
 import '../../../utils/app_error_handler.dart';
 
 /// Mode tampilan hasil pencarian
@@ -88,10 +89,7 @@ class DiscoveryProvider extends ChangeNotifier {
       final newLocation = LatLng(position.latitude, position.longitude);
 
       // Validasi dalam wilayah Indonesia
-      if (newLocation.latitude >= -11.0 &&
-          newLocation.latitude <= 6.0 &&
-          newLocation.longitude >= 95.0 &&
-          newLocation.longitude <= 141.0) {
+      if (DiscoveryDistance.isValidIndonesianCoordinate(newLocation)) {
         _userLocation = newLocation;
       } else {
         _userLocation = MockData.defaultUserLocation;
