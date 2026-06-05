@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../utils/app_error_handler.dart';
 import 'app_notification_service.dart';
 
@@ -240,6 +241,26 @@ class AuthService {
     }
   }
 
+  // Get full user profile stream
+  Stream<Map<String, dynamic>?> getUserProfileStream(String uid) {
+    if (isGuest) {
+      return Stream.value({
+        'name': 'Tamu',
+        'email': 'tamu@donasiku.com',
+        'role': 'Guest',
+        'isVerified': false,
+        'phone': '',
+        'address': '',
+        'photoUrl': '',
+      });
+    }
+    return _firestore
+        .collection('users')
+        .doc(uid)
+        .snapshots()
+        .map((doc) => doc.exists ? doc.data() : null);
+  }
+
   // Get full user profile
   Future<Map<String, dynamic>?> getUserProfile(String uid) async {
     if (isGuest) {
@@ -297,6 +318,46 @@ class AuthService {
       }
     } catch (e) {
       AppErrorHandler.logError('AuthService.updateUserProfile', e);
+      rethrow;
+    }
+  }
+
+  // Upload Profile Picture
+  Future<String> uploadProfilePicture(String uid, Uint8List imageBytes) async {
+    try {
+      Reference ref = FirebaseStorage.instance.ref().child('users').child(uid).child('profile.jpg');
+      UploadTask uploadTask = ref.putData(
+        imageBytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      TaskSnapshot snapshot = await uploadTask;
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      
+      // Update the user's profile with the new photo URL
+      await updateUserProfile(uid: uid, photoUrl: downloadUrl);
+      
+      return downloadUrl;
+    } catch (e) {
+      AppErrorHandler.logError('AuthService.uploadProfilePicture', e);
+      rethrow;
+    }
+  }
+
+  // Delete Profile Picture
+  Future<void> deleteProfilePicture(String uid) async {
+    try {
+      Reference ref = FirebaseStorage.instance.ref().child('users').child(uid).child('profile.jpg');
+      try {
+        await ref.delete();
+      } catch (e) {
+        // If file doesn't exist, ignore the error
+        debugPrint('Profile picture file not found or already deleted: $e');
+      }
+      
+      // Update the user's profile to clear the photo URL
+      await updateUserProfile(uid: uid, photoUrl: '');
+    } catch (e) {
+      AppErrorHandler.logError('AuthService.deleteProfilePicture', e);
       rethrow;
     }
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../theme.dart';
 import '../services/auth_service.dart';
 import '../utils/app_error_handler.dart';
@@ -21,6 +23,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? _profile;
   bool _isLoading = true;
   bool _isEditing = false;
+  bool _isUploadingPhoto = false;
 
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -71,6 +74,155 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     }
     setState(() => _isLoading = false);
+  }
+
+  Future<void> _selectAndUploadImage(ImageSource source) async {
+    final picker = ImagePicker();
+    try {
+      final XFile? image = await picker.pickImage(
+        source: source,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 75,
+      );
+
+      if (image != null) {
+        setState(() => _isUploadingPhoto = true);
+        final bytes = await image.readAsBytes();
+        final user = _authService.currentUser;
+        if (user != null) {
+          await _authService.uploadProfilePicture(user.uid, bytes);
+          await _loadProfile();
+          if (mounted) {
+            AppErrorHandler.showSuccess(context, 'Foto profil berhasil diperbarui!');
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        AppErrorHandler.showError(context, e);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingPhoto = false);
+      }
+    }
+  }
+
+  Future<void> _deletePhoto() async {
+    final user = _authService.currentUser;
+    if (user == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Hapus Foto', style: AppTheme.headingSmall),
+        content: Text(
+          'Yakin ingin menghapus foto profil Anda?',
+          style: AppTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Batal', style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorRed,
+              minimumSize: const Size(0, 40),
+            ),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isUploadingPhoto = true);
+      try {
+        await _authService.deleteProfilePicture(user.uid);
+        await _loadProfile();
+        if (mounted) {
+          AppErrorHandler.showSuccess(context, 'Foto profil berhasil dihapus!');
+        }
+      } catch (e) {
+        if (mounted) {
+          AppErrorHandler.showError(context, e);
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isUploadingPhoto = false);
+        }
+      }
+    }
+  }
+
+  void _showPhotoOptions() {
+    final hasPhoto = _profile?['photoUrl']?.toString().isNotEmpty == true;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.borderGrey,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Foto Profil',
+                style: AppTheme.headingSmall,
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined, color: AppTheme.primaryBlue),
+                title: Text('Ambil Foto (Kamera)', style: AppTheme.bodyMedium),
+                onTap: () {
+                  Navigator.pop(context);
+                  _selectAndUploadImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined, color: AppTheme.primaryBlue),
+                title: Text('Pilih dari Galeri', style: AppTheme.bodyMedium),
+                onTap: () {
+                  Navigator.pop(context);
+                  _selectAndUploadImage(ImageSource.gallery);
+                },
+              ),
+              if (hasPhoto) ...[
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.delete_outline_rounded, color: AppTheme.errorRed),
+                  title: Text(
+                    'Hapus Foto',
+                    style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorRed),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _deletePhoto();
+                  },
+                ),
+              ],
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -128,25 +280,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       const SizedBox(height: 32),
                       // Avatar
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppTheme.borderGrey,
-                            width: 2,
-                          ),
-                        ),
-                        child: CircleAvatar(
-                          radius: 46,
-                          backgroundColor: AppTheme.paleBlue,
-                          child: Text(
-                            name.isNotEmpty ? name[0].toUpperCase() : 'U',
-                            style: AppTheme.headingLarge.copyWith(
-                              color: AppTheme.primaryBlue,
-                              fontSize: 36,
+                      GestureDetector(
+                        onTap: _isUploadingPhoto ? null : _showPhotoOptions,
+                        child: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppTheme.borderGrey,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 46,
+                                    backgroundColor: AppTheme.paleBlue,
+                                    backgroundImage: _profile?['photoUrl']?.toString().isNotEmpty == true
+                                        ? CachedNetworkImageProvider(_profile!['photoUrl'])
+                                        : null,
+                                    child: _profile?['photoUrl']?.toString().isNotEmpty == true
+                                        ? null
+                                        : Text(
+                                            name.isNotEmpty ? name[0].toUpperCase() : 'U',
+                                            style: AppTheme.headingLarge.copyWith(
+                                              color: AppTheme.primaryBlue,
+                                              fontSize: 36,
+                                            ),
+                                          ),
+                                  ),
+                                  if (_isUploadingPhoto)
+                                    Container(
+                                      width: 92,
+                                      height: 92,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.black45,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Center(
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 3,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
+                            // Camera edit icon badge
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: AppTheme.primaryBlue,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black12,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 16),

@@ -4,6 +4,7 @@ import '../../theme.dart';
 import '../../services/auth_service.dart';
 import '../../utils/app_error_handler.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../widgets/donation_image.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -73,23 +74,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
             ClipRRect(
               borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
-              child: CachedNetworkImage(
+              child: DonationImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.contain,
-                placeholder: (context, url) => Container(
+                height: 300,
+                width: double.infinity,
+                errorWidget: Container(
                   height: 200,
                   color: AppTheme.paleBlue,
-                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  child: Center(
+                    child: Text('Gagal memuat gambar', style: AppTheme.bodySmall),
+                  ),
                 ),
-                errorWidget: (context, url, error) {
-                  return Container(
-                    height: 200,
-                    color: AppTheme.paleBlue,
-                    child: Center(
-                      child: Text('Gagal memuat gambar', style: AppTheme.bodySmall),
-                    ),
-                  );
-                },
               ),
             ),
           ],
@@ -169,6 +165,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               final String email = userData['email'] ?? 'Tanpa Email';
               final String ktpUrl = userData['ktpUrl'] ?? '';
               final String sktmUrl = userData['sktmUrl'] ?? '';
+              final String photoUrl = userData['photoUrl'] ?? '';
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -182,7 +179,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         children: [
                           CircleAvatar(
                             backgroundColor: AppTheme.paleBlue,
-                            child: const Icon(Icons.person, color: AppTheme.primaryBlue),
+                            backgroundImage: photoUrl.isNotEmpty
+                                ? CachedNetworkImageProvider(photoUrl)
+                                : null,
+                            child: photoUrl.isNotEmpty
+                                ? null
+                                : const Icon(Icons.person, color: AppTheme.primaryBlue),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
