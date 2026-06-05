@@ -11,7 +11,6 @@ import 'screens/dashboard_screen.dart';
 import 'screens/add_donation_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/pending_verification_screen.dart';
-import 'screens/dashboards/admin_dashboard.dart';
 import 'modules/pencarian_area/providers/discovery_provider.dart';
 import 'utils/app_error_handler.dart';
 import 'services/app_notification_service.dart';
@@ -93,7 +92,6 @@ class DonasikuApp extends StatelessWidget {
           '/add-donation': (context) => const AddDonationScreen(),
           '/history': (context) => const HistoryScreen(),
           '/pending-verification': (context) => const PendingVerificationScreen(),
-          '/admin': (context) => const AdminDashboard(),
         },
       ),
     );
