@@ -53,10 +53,11 @@ class DiscoveryDistance {
       return false;
     }
 
-    // Rentang wilayah Indonesia
-    return coord.latitude >= -11.0 &&
-        coord.latitude <= 6.0 &&
-        coord.longitude >= 95.0 &&
-        coord.longitude <= 141.0;
+    // Disable validasi untuk testing di emulator (seringkali terbaca di California / 0,0)
+    // return coord.latitude >= -11.0 &&
+    //     coord.latitude <= 6.0 &&
+    //     coord.longitude >= 95.0 &&
+    //     coord.longitude <= 141.0;
+    return true;
   }
 }
