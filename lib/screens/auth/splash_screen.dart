@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:donasiku/theme.dart';
 import 'package:donasiku/services/auth_service.dart';
+import 'package:donasiku/services/app_notification_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -47,13 +48,22 @@ class _SplashScreenState extends State<SplashScreen>
     if (user != null && user.isAnonymous) {
       await authService.signOut();
       if (!mounted) return;
+      AppNotificationService.pendingPayload = null;
       Navigator.pushReplacementNamed(context, '/onboarding');
       return;
     }
 
     if (user != null) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      final route = AppNotificationService.pendingPayload;
+      if (route != null && route.isNotEmpty) {
+        AppNotificationService.pendingPayload = null; // Clear it
+        Navigator.pushReplacementNamed(context, '/dashboard');
+        Navigator.pushNamed(context, route);
+      } else {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      }
     } else {
+      AppNotificationService.pendingPayload = null;
       Navigator.pushReplacementNamed(context, '/onboarding');
     }
   }

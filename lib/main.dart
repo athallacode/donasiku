@@ -46,6 +46,7 @@ class DonasikuApp extends StatelessWidget {
       create: (_) => DiscoveryProvider(),
       child: MaterialApp(
         title: 'Donasiku',
+        navigatorKey: AppNotificationService.navigatorKey,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         initialRoute: '/splash',
