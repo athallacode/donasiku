@@ -117,6 +117,4 @@ Kami menerima kontribusi dalam bentuk apapun. Jika Anda menemukan bug atau memil
 
 ## Lisensi
 
-Proyek ini dilisensikan di bawah **MIT License**. Lihat file [LICENSE](LICENSE) untuk detail lebih lanjut.
-
-.
+Proyek ini dilisensikan di bawah **MIT License**. Lihat file [LICENSE](LICENSE) untuk detail lebih lanjut...
