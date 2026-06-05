@@ -1,10 +1,36 @@
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
 import '../utils/app_error_handler.dart';
 import '../models/chat_model.dart';
 
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  // Upload Chat Image from Bytes with Base64 Fallback
+  Future<String> uploadChatImage(Uint8List imageBytes) async {
+    try {
+      String fileName = const Uuid().v4();
+      Reference ref = _storage.ref().child('donations').child('chat_$fileName.jpg');
+      
+      UploadTask uploadTask = ref.putData(
+        imageBytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      
+      TaskSnapshot snapshot = await uploadTask;
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      AppErrorHandler.logError('ChatService.uploadChatImage', e);
+      // FALLBACK: Convert to Base64 and return as data URI
+      String base64String = base64Encode(imageBytes);
+      return 'data:image/jpeg;base64,$base64String';
+    }
+  }
 
   // Get or create chat room for a donation connection
   Future<ChatRoom> getOrCreateChatRoom({
@@ -47,6 +73,7 @@ class ChatService {
     required String senderId,
     required String senderName,
     required String text,
+    String? imageUrl,
   }) async {
     try {
       final messageId = const Uuid().v4();
@@ -55,6 +82,7 @@ class ChatService {
         senderId: senderId,
         senderName: senderName,
         text: text,
+        imageUrl: imageUrl,
         timestamp: DateTime.now(),
       );
 
@@ -68,7 +96,7 @@ class ChatService {
 
       // Update chat room metadata
       await _firestore.collection('chatRooms').doc(chatRoomId).update({
-        'lastMessage': text,
+        'lastMessage': imageUrl != null ? '📷 Foto' : text,
         'lastMessageTime': Timestamp.fromDate(DateTime.now()),
       });
     } catch (e) {
