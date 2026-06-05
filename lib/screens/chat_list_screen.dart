@@ -5,6 +5,7 @@ import '../services/chat_service.dart';
 import '../services/auth_service.dart';
 import 'chat_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ChatListScreen extends StatelessWidget {
   final bool isPreviewMode;
@@ -135,98 +136,114 @@ class ChatListScreen extends StatelessWidget {
   Widget _buildChatRoomTile(
       BuildContext context, ChatRoom room, String currentUserId, bool isReadOnly) {
     final bool isDonor = room.donorId == currentUserId;
+    final String otherUserId = isDonor ? room.receiverId : room.donorId;
     final String otherName = isDonor ? room.receiverName : room.donorName;
     final String initials =
         otherName.isNotEmpty ? otherName[0].toUpperCase() : 'U';
 
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChatScreen(
-              chatRoom: room,
-              isReadOnly: isReadOnly,
+    final AuthService authService = AuthService();
+
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: authService.getUserProfile(otherUserId),
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final photoUrl = profile?['photoUrl'] as String?;
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatScreen(
+                  chatRoom: room,
+                  isReadOnly: isReadOnly,
+                ),
+              ),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: AppTheme.softCard,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  // Avatar
+                  CircleAvatar(
+                    radius: 24,
+                    backgroundColor: AppTheme.primaryBlue.withAlpha(20),
+                    backgroundImage: photoUrl?.isNotEmpty == true
+                        ? CachedNetworkImageProvider(photoUrl!)
+                        : null,
+                    child: photoUrl?.isNotEmpty == true
+                        ? null
+                        : Text(
+                            initials,
+                            style: AppTheme.headingSmall.copyWith(
+                              color: AppTheme.primaryBlue,
+                              fontSize: 20,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(width: 14),
+                  // Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                otherName,
+                                style: AppTheme.labelBold.copyWith(fontSize: 15),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              _formatTime(room.lastMessageTime),
+                              style: AppTheme.bodySmall.copyWith(fontSize: 11),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          room.donationName,
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.primaryBlue,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          room.lastMessage.isNotEmpty
+                              ? room.lastMessage
+                              : 'Belum ada pesan',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: room.lastMessage.isNotEmpty
+                                ? AppTheme.textGrey
+                                : AppTheme.textLight,
+                            fontStyle: room.lastMessage.isEmpty
+                                ? FontStyle.italic
+                                : FontStyle.normal,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: AppTheme.softCard,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Avatar
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: AppTheme.primaryBlue.withAlpha(20),
-                child: Text(
-                  initials,
-                  style: AppTheme.headingSmall.copyWith(
-                    color: AppTheme.primaryBlue,
-                    fontSize: 20,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            otherName,
-                            style: AppTheme.labelBold.copyWith(fontSize: 15),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text(
-                          _formatTime(room.lastMessageTime),
-                          style: AppTheme.bodySmall.copyWith(fontSize: 11),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      room.donationName,
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.primaryBlue,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 11,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      room.lastMessage.isNotEmpty
-                          ? room.lastMessage
-                          : 'Belum ada pesan',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: room.lastMessage.isNotEmpty
-                            ? AppTheme.textGrey
-                            : AppTheme.textLight,
-                        fontStyle: room.lastMessage.isEmpty
-                            ? FontStyle.italic
-                            : FontStyle.normal,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 

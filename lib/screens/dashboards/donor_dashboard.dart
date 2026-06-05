@@ -5,6 +5,7 @@ import '../../services/donation_service.dart';
 import '../../models/donation_model.dart';
 import '../donation_management_screen.dart';
 import '../../widgets/donation_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class DonorDashboard extends StatefulWidget {
   const DonorDashboard({super.key});
@@ -16,21 +17,10 @@ class DonorDashboard extends StatefulWidget {
 class _DonorDashboardState extends State<DonorDashboard> {
   final AuthService _authService = AuthService();
   final DonationService _donationService = DonationService();
-  String _userName = 'Donatur';
+  final String _userName = 'Donatur';
+  final String? _photoUrl = null;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserName();
-  }
 
-  Future<void> _loadUserName() async {
-    final user = _authService.currentUser;
-    if (user != null) {
-      final name = await _authService.getUserName(user.uid);
-      if (mounted) setState(() => _userName = name);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,39 +98,53 @@ class _DonorDashboardState extends State<DonorDashboard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Greeting & Profile
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        StreamBuilder<Map<String, dynamic>?>(
+                          stream: _authService.getUserProfileStream(user?.uid ?? ''),
+                          builder: (context, profileSnapshot) {
+                            final profileData = profileSnapshot.data;
+                            final name = profileData?['name'] ?? _userName;
+                            final photo = profileData?['photoUrl'] ?? _photoUrl;
+
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  'Halo, $_userName 👋',
-                                  style: AppTheme.headingLarge.copyWith(fontSize: 24),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Halo, $name 👋',
+                                      style: AppTheme.headingLarge.copyWith(fontSize: 24),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Terus berbagi kebaikan',
+                                      style: AppTheme.bodyMedium,
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Terus berbagi kebaikan',
-                                  style: AppTheme.bodyMedium,
+                                Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: AppTheme.primaryBlue.withAlpha(80), width: 2),
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: 22,
+                                    backgroundColor: AppTheme.paleBlue,
+                                    backgroundImage: photo?.isNotEmpty == true
+                                        ? CachedNetworkImageProvider(photo!)
+                                        : null,
+                                    child: photo?.isNotEmpty == true
+                                        ? null
+                                        : Text(
+                                            name.isNotEmpty ? name[0].toUpperCase() : 'D',
+                                            style: AppTheme.headingMedium.copyWith(color: AppTheme.primaryBlue, fontSize: 18),
+                                          ),
+                                  ),
                                 ),
                               ],
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: AppTheme.primaryBlue.withAlpha(80), width: 2),
-                              ),
-                              child: CircleAvatar(
-                                radius: 22,
-                                backgroundColor: AppTheme.paleBlue,
-                                child: Text(
-                                  _userName.isNotEmpty ? _userName[0].toUpperCase() : 'D',
-                                  style: AppTheme.headingMedium.copyWith(color: AppTheme.primaryBlue, fontSize: 18),
-                                ),
-                              ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
                         
                         const SizedBox(height: 24),

@@ -169,6 +169,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               final String email = userData['email'] ?? 'Tanpa Email';
               final String ktpUrl = userData['ktpUrl'] ?? '';
               final String sktmUrl = userData['sktmUrl'] ?? '';
+              final String photoUrl = userData['photoUrl'] ?? '';
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -182,7 +183,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         children: [
                           CircleAvatar(
                             backgroundColor: AppTheme.paleBlue,
-                            child: const Icon(Icons.person, color: AppTheme.primaryBlue),
+                            backgroundImage: photoUrl.isNotEmpty
+                                ? CachedNetworkImageProvider(photoUrl)
+                                : null,
+                            child: photoUrl.isNotEmpty
+                                ? null
+                                : const Icon(Icons.person, color: AppTheme.primaryBlue),
                           ),
                           const SizedBox(width: 12),
                           Expanded(

@@ -35,6 +35,26 @@ class _ChatScreenState extends State<ChatScreen> {
   Uint8List? _selectedImageBytes;
   File? _selectedImageFile;
   bool _isSending = false;
+  String? _otherPhotoUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOtherUserProfile();
+  }
+
+  Future<void> _loadOtherUserProfile() async {
+    final user = _authService.currentUser;
+    if (user == null) return;
+    final bool isDonor = widget.chatRoom.donorId == user.uid;
+    final String otherUserId = isDonor ? widget.chatRoom.receiverId : widget.chatRoom.donorId;
+    final profile = await _authService.getUserProfile(otherUserId);
+    if (mounted && profile != null) {
+      setState(() {
+        _otherPhotoUrl = profile['photoUrl'];
+      });
+    }
+  }
 
   void _sendMessage() async {
     final text = _messageController.text.trim();
@@ -319,13 +339,18 @@ class _ChatScreenState extends State<ChatScreen> {
             CircleAvatar(
               radius: 18,
               backgroundColor: AppTheme.primaryBlue.withAlpha(20),
-              child: Text(
-                otherName.isNotEmpty ? otherName[0].toUpperCase() : 'U',
-                style: AppTheme.labelBold.copyWith(
-                  color: AppTheme.primaryBlue,
-                  fontSize: 16,
-                ),
-              ),
+              backgroundImage: _otherPhotoUrl?.isNotEmpty == true
+                  ? CachedNetworkImageProvider(_otherPhotoUrl!)
+                  : null,
+              child: _otherPhotoUrl?.isNotEmpty == true
+                  ? null
+                  : Text(
+                      otherName.isNotEmpty ? otherName[0].toUpperCase() : 'U',
+                      style: AppTheme.labelBold.copyWith(
+                        color: AppTheme.primaryBlue,
+                        fontSize: 16,
+                      ),
+                    ),
             ),
             const SizedBox(width: 12),
             Expanded(

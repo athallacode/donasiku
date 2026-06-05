@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import '../models/donation_model.dart';
 import '../services/donation_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/donation_image.dart';
 import 'edit_donation_screen.dart';
 import 'donation_detail_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class DonationManagementScreen extends StatefulWidget {
   final Donation donation;
@@ -63,147 +65,162 @@ class _DonationManagementScreenState extends State<DonationManagementScreen> {
             ? AppTheme.errorRed
             : AppTheme.amber;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: AppTheme.softCard,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Requester Info
-            Row(
+    final AuthService authService = AuthService();
+
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: authService.getUserProfile(request.requesterId),
+      builder: (context, snapshot) {
+        final profile = snapshot.data;
+        final photoUrl = profile?['photoUrl'] as String?;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: AppTheme.softCard,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: AppTheme.primaryBlue.withAlpha(25),
-                  child: Text(
-                    request.requesterName.isNotEmpty
-                        ? request.requesterName[0].toUpperCase()
-                        : 'U',
-                    style: AppTheme.headingSmall.copyWith(
-                      color: AppTheme.primaryBlue,
-                      fontSize: 18,
+                // Requester Info
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 22,
+                      backgroundColor: AppTheme.primaryBlue.withAlpha(25),
+                      backgroundImage: photoUrl?.isNotEmpty == true
+                          ? CachedNetworkImageProvider(photoUrl!)
+                          : null,
+                      child: photoUrl?.isNotEmpty == true
+                          ? null
+                          : Text(
+                              request.requesterName.isNotEmpty
+                                  ? request.requesterName[0].toUpperCase()
+                                  : 'U',
+                              style: AppTheme.headingSmall.copyWith(
+                                color: AppTheme.primaryBlue,
+                                fontSize: 18,
+                              ),
+                            ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        request.requesterName,
-                        style: AppTheme.labelBold.copyWith(fontSize: 15),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            request.requesterName,
+                            style: AppTheme.labelBold.copyWith(fontSize: 15),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            DateFormat('dd MMM yyyy, HH:mm')
+                                .format(request.requestedAt),
+                            style: AppTheme.bodySmall.copyWith(fontSize: 11),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        DateFormat('dd MMM yyyy, HH:mm')
-                            .format(request.requestedAt),
-                        style: AppTheme.bodySmall.copyWith(fontSize: 11),
+                    ),
+                    if (!isPending)
+                      Container(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statusColor.withAlpha(25),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          request.status == 'approved' ? 'Disetujui' : 'Ditolak',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: statusColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
+                  ],
                 ),
-                if (!isPending)
+                // Message
+                if (request.message.isNotEmpty) ...[
+                  const SizedBox(height: 16),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: statusColor.withAlpha(25),
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppTheme.backgroundGrey,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppTheme.borderGrey),
                     ),
                     child: Text(
-                      request.status == 'approved' ? 'Disetujui' : 'Ditolak',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
+                      '"${request.message}"',
+                      style: AppTheme.bodyMedium.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: AppTheme.textDark,
                       ),
-                    ),
-                  ),
-              ],
-            ),
-            // Message
-            if (request.message.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.backgroundGrey,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.borderGrey),
-                ),
-                child: Text(
-                  '"${request.message}"',
-                  style: AppTheme.bodyMedium.copyWith(
-                    fontStyle: FontStyle.italic,
-                    color: AppTheme.textDark,
-                  ),
-                ),
-              ),
-            ],
-            // Action Buttons
-            if (isPending) ...[
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () async {
-                        await _donationService.rejectRequest(
-                          donationId: donationId,
-                          requesterId: request.requesterId,
-                        );
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Permintaan ditolak'),
-                              backgroundColor: AppTheme.errorRed,
-                            ),
-                          );
-                        }
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.errorRed,
-                        side: const BorderSide(color: AppTheme.errorRed),
-                        minimumSize: const Size(0, 48),
-                      ),
-                      child: const Text('Tolak'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        await _donationService.approveRequest(
-                          donationId: donationId,
-                          requesterId: request.requesterId,
-                          requesterName: request.requesterName,
-                        );
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Permintaan disetujui! 🎉'),
-                              backgroundColor: AppTheme.successGreen,
-                            ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.emeraldGreen,
-                        minimumSize: const Size(0, 48),
-                      ),
-                      child: const Text('Setujui'),
                     ),
                   ),
                 ],
-              ),
-            ],
-          ],
-        ),
-      ),
+                // Action Buttons
+                if (isPending) ...[
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () async {
+                            await _donationService.rejectRequest(
+                              donationId: donationId,
+                              requesterId: request.requesterId,
+                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Permintaan ditolak'),
+                                  backgroundColor: AppTheme.errorRed,
+                                ),
+                              );
+                            }
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.errorRed,
+                            side: const BorderSide(color: AppTheme.errorRed),
+                            minimumSize: const Size(0, 48),
+                          ),
+                          child: const Text('Tolak'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            await _donationService.approveRequest(
+                              donationId: donationId,
+                              requesterId: request.requesterId,
+                              requesterName: request.requesterName,
+                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Permintaan disetujui! 🎉'),
+                                  backgroundColor: AppTheme.successGreen,
+                                ),
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.emeraldGreen,
+                            minimumSize: const Size(0, 48),
+                          ),
+                          child: const Text('Setujui'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
