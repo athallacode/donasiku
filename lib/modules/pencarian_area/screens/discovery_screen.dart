@@ -17,11 +17,13 @@ import '../../../theme.dart';
 class DiscoveryScreen extends StatefulWidget {
   final UserRole userRole;
   final bool isLocationVerified;
+  final bool isPreviewMode;
 
   const DiscoveryScreen({
     super.key,
     required this.userRole,
     this.isLocationVerified = true,
+    this.isPreviewMode = false,
   });
 
   @override
@@ -56,12 +58,6 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
   Widget build(BuildContext context) {
     return Consumer<DiscoveryProvider>(
       builder: (context, provider, _) {
-        // Cek verifikasi lokasi (Penerima)
-        if (!provider.isLocationVerified &&
-            widget.userRole == UserRole.penerima) {
-          return _buildVerificationBlockedScreen();
-        }
-
         return Scaffold(
           backgroundColor: AppTheme.backgroundGrey,
           appBar: AppBar(
@@ -189,6 +185,13 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                     // Admin status filter
                     if (widget.userRole == UserRole.admin)
                       _buildAdminStatusFilter(provider),
+
+                    if (widget.isPreviewMode)
+                      _buildRoleBanner(
+                        'Mode preview aktif. Akun Anda masih diverifikasi, jadi fitur permintaan hanya bisa dibaca.',
+                        Icons.visibility_off_rounded,
+                        AppTheme.amber,
+                      ),
 
                     // Category filter chips
                     Padding(
@@ -328,7 +331,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
         return DonationCard(
           item: item,
           userRole: widget.userRole,
-          onRequestTap: widget.userRole == UserRole.penerima
+          onRequestTap: widget.userRole == UserRole.penerima &&
+                  !widget.isPreviewMode
               ? () => _showRequestDialog(context, item)
               : null,
           onDetailTap: () => _showDetailDialog(context, item),
@@ -494,7 +498,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                         style: TextStyle(color: Colors.white)),
                   ),
                 ),
-                if (widget.userRole == UserRole.penerima) ...[
+                if (widget.userRole == UserRole.penerima &&
+                    !widget.isPreviewMode) ...[
                   const SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton(
@@ -608,7 +613,8 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 const SizedBox(height: 24),
 
                 // Tombol aksi
-                if (widget.userRole == UserRole.penerima)
+                if (widget.userRole == UserRole.penerima &&
+                    !widget.isPreviewMode)
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -887,47 +893,4 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
     );
   }
 
-  /// Layar blokir untuk Penerima yang belum terverifikasi
-  Widget _buildVerificationBlockedScreen() {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundGrey,
-      appBar: AppBar(
-        backgroundColor: AppTheme.white,
-        elevation: 0,
-        title: Text('Cari Barang Donasi',
-            style: AppTheme.headingSmall.copyWith(color: AppTheme.textDark)),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(40),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppTheme.amber.withAlpha(20),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.hourglass_top_rounded,
-                    size: 56, color: AppTheme.amber),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Menunggu Verifikasi',
-                style: AppTheme.headingMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Lokasi Anda sedang menunggu verifikasi Admin. Discovery akan aktif setelah lokasi diverifikasi.',
-                style: AppTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

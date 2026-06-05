@@ -7,8 +7,13 @@ import 'package:intl/intl.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatRoom chatRoom;
+  final bool isReadOnly;
 
-  const ChatScreen({super.key, required this.chatRoom});
+  const ChatScreen({
+    super.key,
+    required this.chatRoom,
+    this.isReadOnly = false,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -134,6 +139,20 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
 
+          if (widget.isReadOnly)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              color: AppTheme.amber.withAlpha(18),
+              child: Text(
+                'Mode preview aktif. Anda dapat membaca percakapan, tetapi belum dapat mengirim pesan.',
+                style: AppTheme.bodySmall.copyWith(
+                  color: AppTheme.textDark,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+
           // Messages
           Expanded(
             child: StreamBuilder<List<ChatMessage>>(
@@ -220,58 +239,59 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
 
           // Input Bar
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-            decoration: BoxDecoration(
-              color: AppTheme.white,
-              border: const Border(
-                top: BorderSide(color: AppTheme.borderGrey),
+          if (!widget.isReadOnly)
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              decoration: BoxDecoration(
+                color: AppTheme.white,
+                border: const Border(
+                  top: BorderSide(color: AppTheme.borderGrey),
+                ),
               ),
-            ),
-            child: SafeArea(
-              top: false,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.backgroundGrey,
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: TextField(
-                        controller: _messageController,
-                        textCapitalization: TextCapitalization.sentences,
-                        maxLines: 4,
-                        minLines: 1,
-                        decoration: InputDecoration(
-                          hintText: 'Ketik pesan...',
-                          hintStyle: AppTheme.bodyMedium,
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          filled: false,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
+              child: SafeArea(
+                top: false,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.backgroundGrey,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: TextField(
+                          controller: _messageController,
+                          textCapitalization: TextCapitalization.sentences,
+                          maxLines: 4,
+                          minLines: 1,
+                          decoration: InputDecoration(
+                            hintText: 'Ketik pesan...',
+                            hintStyle: AppTheme.bodyMedium,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            filled: false,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryBlue,
-                      borderRadius: BorderRadius.circular(24),
+                    const SizedBox(width: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryBlue,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: IconButton(
+                        onPressed: _sendMessage,
+                        icon: const Icon(Icons.send_rounded,
+                            color: Colors.white, size: 20),
+                      ),
                     ),
-                    child: IconButton(
-                      onPressed: _sendMessage,
-                      icon: const Icon(Icons.send_rounded,
-                          color: Colors.white, size: 20),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

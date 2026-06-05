@@ -8,7 +8,12 @@ import '../widgets/donation_image.dart';
 import 'chat_screen.dart';
 
 class TrackingScreen extends StatelessWidget {
-  const TrackingScreen({super.key});
+  final bool isPreviewMode;
+
+  const TrackingScreen({
+    super.key,
+    this.isPreviewMode = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -106,6 +111,7 @@ class TrackingScreen extends StatelessWidget {
                             role: role ?? 'Donatur',
                             donationService: donationService,
                             authService: authService,
+                            isPreviewMode: isPreviewMode,
                           );
                         },
                         childCount: donations.length,
@@ -127,12 +133,14 @@ class _TrackingCard extends StatelessWidget {
   final String role;
   final DonationService donationService;
   final AuthService authService;
+  final bool isPreviewMode;
 
   const _TrackingCard({
     required this.donation,
     required this.role,
     required this.donationService,
     required this.authService,
+    required this.isPreviewMode,
   });
 
   @override
@@ -332,6 +340,7 @@ class _TrackingCard extends StatelessWidget {
   }
 
   bool _canUpdateStatus() {
+    if (isPreviewMode) return false;
     if (role == 'Donatur' && donation.status == 'Diproses') return true;
     if (role == 'Penerima' && donation.status == 'Dikirim') return true;
     return false;
@@ -424,7 +433,10 @@ class _TrackingCard extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ChatScreen(chatRoom: chatRoom),
+          builder: (context) => ChatScreen(
+            chatRoom: chatRoom,
+            isReadOnly: isPreviewMode,
+          ),
         ),
       );
     }
