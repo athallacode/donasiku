@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme.dart';
+import 'package:donasiku/theme.dart';
 
 class PolicyScreen extends StatelessWidget {
   const PolicyScreen({super.key});

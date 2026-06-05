@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../theme.dart';
-import '../services/auth_service.dart';
-import '../utils/app_error_handler.dart';
+import 'package:donasiku/theme.dart';
+import 'package:donasiku/services/auth_service.dart';
+import 'package:donasiku/utils/app_error_handler.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -59,6 +59,20 @@ class _LoginScreenState extends State<LoginScreen> {
       action: () async {
         final user = await _authService.signInWithGoogle();
         if (user != null && mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
+        }
+      },
+    );
+  }
+
+  void _handleGuestLogin() async {
+    await AppErrorHandler.performSafeAction(
+      context,
+      featureName: 'LoginScreen.handleGuestLogin',
+      loadingStateSetter: (v) => setState(() => _isLoading = v),
+      action: () async {
+        await _authService.signInAnonymously();
+        if (mounted) {
           Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
         }
       },
@@ -333,6 +347,39 @@ class _LoginScreenState extends State<LoginScreen> {
                         Text(
                           'Google',
                           style: AppTheme.labelBold.copyWith(color: AppTheme.textDark),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Guest Login button
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _handleGuestLogin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.backgroundGrey,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.visibility_outlined,
+                          color: AppTheme.primaryBlue,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Masuk sebagai Tamu (Lihat Donasi)',
+                          style: AppTheme.labelBold.copyWith(color: AppTheme.primaryBlue),
                         ),
                       ],
                     ),

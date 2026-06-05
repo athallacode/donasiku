@@ -1,14 +1,10 @@
 # Miscellaneous
 *.class
 *.log
-*.pyc
 *.swp
 .DS_Store
-.atom/
 .build/
-.buildlog/
 .history
-.svn/
 .swiftpm/
 migrate_working_dir/
 *.bak
@@ -22,6 +18,7 @@ migrate_working_dir/
 
 # VS Code related
 .vscode/
+.claude
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -63,3 +60,6 @@ flutter_*.log
 # Windows specific
 Thumb.db
 desktop.ini
+
+# Firebase configuration
+lib/firebase_options.dart

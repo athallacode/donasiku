@@ -220,7 +220,8 @@ class DonationCard extends StatelessWidget {
         );
 
       case UserRole.donatur:
-        // Donatur: tidak ada tombol aksi
+      case UserRole.guest:
+        // Donatur & Guest: tidak ada tombol aksi
         return const SizedBox.shrink();
     }
   }

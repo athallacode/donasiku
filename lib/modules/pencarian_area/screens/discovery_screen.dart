@@ -33,6 +33,7 @@ class DiscoveryScreen extends StatefulWidget {
 class _DiscoveryScreenState extends State<DiscoveryScreen> {
   final TextEditingController _searchController = TextEditingController();
   final MapController _mapController = MapController();
+  bool _isLoggingOut = false;
 
   @override
   void initState() {
@@ -68,6 +69,29 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
             ),
             centerTitle: false,
             actions: [
+              if (widget.userRole == UserRole.guest)
+                IconButton(
+                  icon: _isLoggingOut
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.errorRed,
+                          ),
+                        )
+                      : const Icon(Icons.logout_rounded, color: AppTheme.errorRed),
+                  onPressed: _isLoggingOut
+                      ? null
+                      : () async {
+                          setState(() => _isLoggingOut = true);
+                          await AuthService().signOut();
+                          if (context.mounted) {
+                            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                          }
+                        },
+                  tooltip: 'Keluar dari Mode Tamu',
+                ),
               // Toggle view (list/map)
               Container(
                 margin: const EdgeInsets.only(right: 12),

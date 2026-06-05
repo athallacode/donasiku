@@ -58,7 +58,8 @@ enum ItemStatus {
 enum UserRole {
   donatur,
   penerima,
-  admin;
+  admin,
+  guest;
 
   static UserRole fromString(String value) {
     switch (value) {
@@ -68,6 +69,8 @@ enum UserRole {
         return UserRole.penerima;
       case 'Admin':
         return UserRole.admin;
+      case 'Guest':
+        return UserRole.guest;
       default:
         return UserRole.penerima;
     }

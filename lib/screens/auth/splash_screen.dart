@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme.dart';
-import '../services/auth_service.dart';
+import 'package:donasiku/theme.dart';
+import 'package:donasiku/services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -39,7 +39,18 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
-    final user = AuthService().currentUser;
+    final authService = AuthService();
+    final user = authService.currentUser;
+
+    // Anonymous (guest) sessions are not persisted across app restarts.
+    // Sign them out so the user returns to the normal onboarding flow.
+    if (user != null && user.isAnonymous) {
+      await authService.signOut();
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/onboarding');
+      return;
+    }
+
     if (user != null) {
       Navigator.pushReplacementNamed(context, '/dashboard');
     } else {
