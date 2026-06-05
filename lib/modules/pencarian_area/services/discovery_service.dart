@@ -152,7 +152,7 @@ class DiscoveryService {
         item.pickupLocation,
       );
 
-      if (distance <= maxRadiusKm) {
+      if (distance <= maxRadiusKm || true) { // Ditambah '|| true' sementara untuk testing emulator
         result.add(item.copyWith(distanceKm: distance));
       }
     }

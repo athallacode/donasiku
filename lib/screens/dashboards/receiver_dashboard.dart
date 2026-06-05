@@ -18,10 +18,7 @@ import '../../models/donation_model.dart';
 class ReceiverDashboard extends StatefulWidget {
   final bool isPreviewMode;
 
-  const ReceiverDashboard({
-    super.key,
-    this.isPreviewMode = false,
-  });
+  const ReceiverDashboard({super.key, this.isPreviewMode = false});
 
   @override
   State<ReceiverDashboard> createState() => _ReceiverDashboardState();
@@ -66,9 +63,9 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
     _loadUserName();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DiscoveryProvider>().initialize(
-            role: UserRole.penerima,
-            isVerified: !widget.isPreviewMode,
-          );
+        role: UserRole.penerima,
+        isVerified: !widget.isPreviewMode,
+      );
     });
   }
 
@@ -113,7 +110,9 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                                 children: [
                                   Text(
                                     'Halo, $_userName 👋',
-                                    style: AppTheme.headingLarge.copyWith(fontSize: 24),
+                                    style: AppTheme.headingLarge.copyWith(
+                                      fontSize: 24,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -129,14 +128,22 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                               padding: const EdgeInsets.all(2),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(color: AppTheme.emeraldGreen.withAlpha(80), width: 2),
+                                border: Border.all(
+                                  color: AppTheme.emeraldGreen.withAlpha(80),
+                                  width: 2,
+                                ),
                               ),
                               child: CircleAvatar(
                                 radius: 22,
                                 backgroundColor: AppTheme.mintGreen,
                                 child: Text(
-                                  _userName.isNotEmpty ? _userName[0].toUpperCase() : 'P',
-                                  style: AppTheme.headingMedium.copyWith(color: AppTheme.emeraldGreen, fontSize: 18),
+                                  _userName.isNotEmpty
+                                      ? _userName[0].toUpperCase()
+                                      : 'P',
+                                  style: AppTheme.headingMedium.copyWith(
+                                    color: AppTheme.emeraldGreen,
+                                    fontSize: 18,
+                                  ),
                                 ),
                               ),
                             ),
@@ -150,11 +157,16 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                             decoration: BoxDecoration(
                               color: AppTheme.amber.withAlpha(15),
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppTheme.amber.withAlpha(50)),
+                              border: Border.all(
+                                color: AppTheme.amber.withAlpha(50),
+                              ),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.remove_red_eye_rounded, color: AppTheme.amber),
+                                const Icon(
+                                  Icons.remove_red_eye_rounded,
+                                  color: AppTheme.amber,
+                                ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
@@ -184,7 +196,10 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text('Cara Meminta Donasi', style: AppTheme.headingSmall),
+                        child: Text(
+                          'Cara Meminta Donasi',
+                          style: AppTheme.headingSmall,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
@@ -209,7 +224,7 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                                     color: color.withAlpha(20),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
-                                  )
+                                  ),
                                 ],
                               ),
                               child: Column(
@@ -217,7 +232,8 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Container(
                                         padding: const EdgeInsets.all(10),
@@ -225,7 +241,11 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                                           color: color.withAlpha(15),
                                           shape: BoxShape.circle,
                                         ),
-                                        child: Icon(step['icon'] as IconData, color: color, size: 22),
+                                        child: Icon(
+                                          step['icon'] as IconData,
+                                          color: color,
+                                          size: 22,
+                                        ),
                                       ),
                                       Text(
                                         'Langkah ${index + 1}',
@@ -239,12 +259,17 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                                   const SizedBox(height: 16),
                                   Text(
                                     step['title'] as String,
-                                    style: AppTheme.labelBold.copyWith(fontSize: 14),
+                                    style: AppTheme.labelBold.copyWith(
+                                      fontSize: 14,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     step['desc'] as String,
-                                    style: AppTheme.bodySmall.copyWith(color: AppTheme.textDark, fontSize: 11),
+                                    style: AppTheme.bodySmall.copyWith(
+                                      color: AppTheme.textDark,
+                                      fontSize: 11,
+                                    ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -279,14 +304,26 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                                 ),
                                 child: TextField(
                                   controller: _searchController,
-                                  onChanged: (value) => provider.setKeyword(value),
+                                  onChanged: (value) =>
+                                      provider.setKeyword(value),
                                   decoration: InputDecoration(
                                     hintText: 'Cari baju, buku...',
-                                    hintStyle: AppTheme.bodySmall.copyWith(color: AppTheme.textLight),
-                                    prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.primaryBlue, size: 22),
-                                    suffixIcon: _searchController.text.isNotEmpty
+                                    hintStyle: AppTheme.bodySmall.copyWith(
+                                      color: AppTheme.textLight,
+                                    ),
+                                    prefixIcon: const Icon(
+                                      Icons.search_rounded,
+                                      color: AppTheme.primaryBlue,
+                                      size: 22,
+                                    ),
+                                    suffixIcon:
+                                        _searchController.text.isNotEmpty
                                         ? IconButton(
-                                            icon: const Icon(Icons.clear_rounded, color: AppTheme.textLight, size: 18),
+                                            icon: const Icon(
+                                              Icons.clear_rounded,
+                                              color: AppTheme.textLight,
+                                              size: 18,
+                                            ),
                                             onPressed: () {
                                               _searchController.clear();
                                               provider.setKeyword('');
@@ -296,7 +333,9 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                                     border: InputBorder.none,
                                     enabledBorder: InputBorder.none,
                                     focusedBorder: InputBorder.none,
-                                    contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -311,13 +350,16 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                                 children: [
                                   _buildViewToggle(
                                     icon: Icons.grid_view_rounded,
-                                    isActive: provider.viewMode == ViewMode.list,
-                                    onTap: () => provider.setViewMode(ViewMode.list),
+                                    isActive:
+                                        provider.viewMode == ViewMode.list,
+                                    onTap: () =>
+                                        provider.setViewMode(ViewMode.list),
                                   ),
                                   _buildViewToggle(
                                     icon: Icons.map_rounded,
                                     isActive: provider.viewMode == ViewMode.map,
-                                    onTap: () => provider.setViewMode(ViewMode.map),
+                                    onTap: () =>
+                                        provider.setViewMode(ViewMode.map),
                                   ),
                                 ],
                               ),
@@ -380,7 +422,11 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
               if (provider.isLoading)
                 const SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(child: CircularProgressIndicator(color: AppTheme.primaryBlue)),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppTheme.primaryBlue,
+                    ),
+                  ),
                 )
               else if (provider.errorMessage != null)
                 SliverFillRemaining(
@@ -391,11 +437,17 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.error_outline_rounded, size: 48, color: AppTheme.errorRed),
+                          Icon(
+                            Icons.error_outline_rounded,
+                            size: 48,
+                            color: AppTheme.errorRed,
+                          ),
                           const SizedBox(height: 20),
                           Text(
                             provider.errorMessage!,
-                            style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorRed),
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: AppTheme.errorRed,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 20),
@@ -422,27 +474,21 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
               else if (provider.viewMode == ViewMode.list)
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
-                  sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.68,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 14,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        return DonationCard(
-                          item: provider.results[index],
-                          userRole: UserRole.penerima,
-                          isGridMode: true,
-                          onRequestTap: !widget.isPreviewMode
-                              ? () => _showRequestDialog(context, provider.results[index])
-                              : null,
-                          onDetailTap: () => _navigateToDetail(context, provider.results[index]),
-                        );
-                      },
-                      childCount: provider.results.length,
-                    ),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      return DonationCard(
+                        item: provider.results[index],
+                        userRole: UserRole.penerima,
+                        onRequestTap: !widget.isPreviewMode
+                            ? () => _showRequestDialog(
+                                context,
+                                provider.results[index],
+                              )
+                            : null,
+                        onDetailTap: () =>
+                            _navigateToDetail(context, provider.results[index]),
+                      );
+                    }, childCount: provider.results.length),
                   ),
                 )
               else
@@ -459,7 +505,7 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
 
   /// Navigate to Donation Detail Screen
   void _navigateToDetail(BuildContext context, DonationItem item) {
-    // Convert DiscoveryItem back to standard Donation model if needed, 
+    // Convert DiscoveryItem back to standard Donation model if needed,
     // but the best way is to fetch the full object or adapt it.
     // For simplicity, we create a partial Donation object.
     final donation = Donation(
@@ -471,7 +517,7 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
       location: item.donorCity,
       imageUrl: item.imageUrl,
       status: item.status.label,
-      createdAt: item.createdAt,
+      createdAt: item.postedAt,
     );
 
     Navigator.push(
@@ -539,7 +585,11 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                         ),
                       ],
                     ),
-                    child: Icon(item.category.icon, color: Colors.white, size: 18),
+                    child: Icon(
+                      item.category.icon,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                   ),
                 ),
               );
@@ -575,18 +625,29 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                     color: item.category.color.withAlpha(25),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(item.category.icon, color: item.category.color, size: 24),
+                  child: Icon(
+                    item.category.icon,
+                    color: item.category.color,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.name, style: AppTheme.labelBold.copyWith(fontSize: 16)),
+                      Text(
+                        item.name,
+                        style: AppTheme.labelBold.copyWith(fontSize: 16),
+                      ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.location_on_rounded, size: 14, color: AppTheme.emeraldGreen),
+                          Icon(
+                            Icons.location_on_rounded,
+                            size: 14,
+                            color: AppTheme.emeraldGreen,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             item.distanceKm != null
@@ -628,7 +689,10 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Lihat Detail', style: TextStyle(color: Colors.white)),
+                    child: const Text(
+                      'Lihat Detail',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
                 if (!widget.isPreviewMode) ...[
@@ -647,7 +711,10 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text('Minta Barang', style: TextStyle(color: Colors.white)),
+                      child: const Text(
+                        'Minta Barang',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
                 ],
@@ -681,10 +748,17 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
               ),
               child: Row(
                 children: [
-                  Icon(item.category.icon, color: item.category.color, size: 24),
+                  Icon(
+                    item.category.icon,
+                    color: item.category.color,
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(item.name, style: AppTheme.labelBold.copyWith(fontSize: 13)),
+                    child: Text(
+                      item.name,
+                      style: AppTheme.labelBold.copyWith(fontSize: 13),
+                    ),
                   ),
                 ],
               ),
@@ -723,7 +797,10 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                       : () async {
                           final message = messageController.text.trim();
                           if (message.isEmpty) {
-                            AppErrorHandler.showWarning(context, 'Pesan tidak boleh kosong');
+                            AppErrorHandler.showWarning(
+                              context,
+                              'Pesan tidak boleh kosong',
+                            );
                             return;
                           }
 
@@ -731,8 +808,11 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
 
                           try {
                             final user = _authService.currentUser;
-                            if (user == null) throw Exception('Silakan login terlebih dahulu');
-                            final userName = await _authService.getUserName(user.uid);
+                            if (user == null)
+                              throw Exception('Silakan login terlebih dahulu');
+                            final userName = await _authService.getUserName(
+                              user.uid,
+                            );
 
                             await DonationService().requestDonation(
                               donationId: item.id,
@@ -743,7 +823,10 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
 
                             if (context.mounted) {
                               Navigator.pop(context);
-                              AppErrorHandler.showSuccess(context, 'Permintaan berhasil dikirim! 🎉');
+                              AppErrorHandler.showSuccess(
+                                context,
+                                'Permintaan berhasil dikirim! 🎉',
+                              );
                             }
                           } catch (e) {
                             if (context.mounted) {
@@ -764,7 +847,10 @@ class _ReceiverDashboardState extends State<ReceiverDashboard> {
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Text('Kirim Permintaan'),
                 );
