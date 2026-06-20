@@ -6,7 +6,7 @@ import '../models/category.dart';
 /// 12 item tersebar di Bandung, Cimahi, dan Lembang
 class MockData {
   /// Lokasi default user (pusat Bandung)
-  static final LatLng defaultUserLocation = LatLng(-6.9175, 107.6191);
+  static final LatLng defaultUserLocation = LatLng(-6.9145, 107.6090);
 
   /// Data donasi dummy
   static List<DonationItem> getDonations() {

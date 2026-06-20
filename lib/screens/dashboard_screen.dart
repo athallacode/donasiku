@@ -4,6 +4,7 @@ import '../utils/app_error_handler.dart';
 import 'dashboards/donor_dashboard.dart';
 import 'dashboards/receiver_dashboard.dart';
 import 'dashboards/admin_dashboard.dart';
+import 'auth/pending_verification_screen.dart';
 import 'tracking_screen.dart';
 import 'chat_list_screen.dart';
 import 'profile_screen.dart';
@@ -164,11 +165,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (_role == 'Guest') {
       return const DiscoveryScreen(
         userRole: UserRole.guest,
-        isLocationVerified: false,
+        isLocationVerified: true, // Guest boleh lihat donasi, tidak perlu verifikasi
       );
     }
 
-    final bool isPreviewMode = _role == 'Penerima' && !_isVerified;
+
+    // Penerima yang belum diverifikasi admin → tampilkan halaman tunggu
+    if (_role == 'Penerima' && !_isVerified) {
+      return const PendingVerificationScreen();
+    }
+
+    final bool isPreviewMode = false;
 
     // Konversi role string ke UserRole enum
     final userRole = UserRole.fromString(_role!);

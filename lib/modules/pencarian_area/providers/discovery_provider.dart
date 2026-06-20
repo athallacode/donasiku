@@ -53,10 +53,13 @@ class DiscoveryProvider extends ChangeNotifier {
     _userRole = role;
     _isLocationVerified = isVerified;
 
+    // Hanya blok Penerima yang belum diverifikasi admin.
+    // Guest tetap bisa search meskipun isLocationVerified = false.
     if (!_isLocationVerified && role == UserRole.penerima) {
       notifyListeners();
       return;
     }
+
 
     // Coba ambil lokasi GPS user
     await _tryGetUserLocation();
