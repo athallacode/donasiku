@@ -11,7 +11,7 @@ import 'mock_data.dart';
 class DiscoveryService {
   /// Flag untuk switch antara mock data dan Firestore
   /// Set ke false untuk menggunakan Firestore langsung
-  static const bool useMockData = false;
+  static const bool useMockData = true;
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -144,6 +144,7 @@ class DiscoveryService {
     for (final item in items) {
       // Skip item dengan koordinat invalid
       if (!DiscoveryDistance.isValidIndonesianCoordinate(item.pickupLocation)) {
+        print('DEBUG: Item ${item.name} skipped due to invalid coordinate: ${item.pickupLocation}');
         continue;
       }
 
@@ -151,6 +152,8 @@ class DiscoveryService {
         userLocation,
         item.pickupLocation,
       );
+
+      print('DEBUG: Item ${item.name} distance=$distance km (max=$maxRadiusKm) - UserLoc: ${userLocation.latitude},${userLocation.longitude} - ItemLoc: ${item.pickupLocation.latitude},${item.pickupLocation.longitude}');
 
       if (distance <= maxRadiusKm) {
         result.add(item.copyWith(distanceKm: distance));

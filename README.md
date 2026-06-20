@@ -68,12 +68,13 @@
 Pengalaman pertama pengguna dirancang dengan mulus, mulai dari layar splash animasi, onboarding informatif, kebijakan privasi, hingga registrasi dengan pemilihan peran.
 
 <p align="center">
-  <img src="docs/screenshots/screenshot_donasiku_final.png" alt="Onboarding Screen" width="250"/>
+  <img src="docs/screenshots/ss_01_login.png" alt="Login Screen" width="250"/>
   &nbsp;&nbsp;
-  <img src="docs/design/Login.png" alt="Login Screen" width="250"/>
+  <img src="docs/screenshots/ss_02_register.png" alt="Register Screen" width="250"/>
   &nbsp;&nbsp;
-  <img src="docs/design/Daftar.png" alt="Register Screen" width="250"/>
+  <img src="docs/screenshots/ss_03_register_penerima.png" alt="Register Penerima Screen" width="250"/>
 </p>
+
 
 **Fitur detail:**
 - 🎬 **Splash Screen** — Animasi logo saat aplikasi pertama kali dibuka.
@@ -90,7 +91,11 @@ Pengalaman pertama pengguna dirancang dengan mulus, mulai dari layar splash anim
 Dashboard khusus untuk donatur yang menampilkan ringkasan aktivitas donasi, sistem gamifikasi level, dan daftar donasi yang sedang aktif.
 
 <p align="center">
-  <img src="docs/screenshots/screenshot_donasiku_check.png" alt="Donor Dashboard" width="250"/>
+  <img src="docs/screenshots/ss_donatur_dashboard.png" alt="Donor Dashboard" width="250"/>
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/ss_02_donator_discovery_list.png" alt="Discovery List" width="250"/>
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/ss_03_donator_discovery_map.png" alt="Discovery Map" width="250"/>
 </p>
 
 **Fitur detail:**
@@ -107,6 +112,10 @@ Dashboard khusus untuk donatur yang menampilkan ringkasan aktivitas donasi, sist
 
 Halaman utama untuk penerima yang menampilkan semua donasi tersedia, panduan cara meminta, dan kategori untuk memfilter barang.
 
+<p align="center">
+  <img src="docs/screenshots/ss_09_recipient_dashboard.png" alt="Recipient Dashboard" width="250"/>
+</p>
+
 **Fitur detail:**
 - 🔎 **Pencarian Pintar** — Search bar dengan filter kategori (Pakaian, Makanan, Buku, Elektronik, Lainnya).
 - 📚 **Panduan 4 Langkah** — Kartu horizontal yang memandu penerima dari "Cari Barang" hingga "Ambil Barang".
@@ -121,7 +130,7 @@ Halaman utama untuk penerima yang menampilkan semua donasi tersedia, panduan car
 Form lengkap untuk donatur menambahkan item donasi baru dengan upload foto, kategori, lokasi, dan deskripsi.
 
 <p align="center">
-  <img src="docs/screenshots/screenshot_donasiku_check.png" alt="Add Donation Screen" width="250"/>
+  <img src="docs/screenshots/ss_04_tambah_donasi.png" alt="Add Donation Screen" width="250"/>
 </p>
 
 **Fitur detail:**
@@ -137,6 +146,10 @@ Form lengkap untuk donatur menambahkan item donasi baru dengan upload foto, kate
 ### 5. Pencarian Area (Geolokasi)
 
 Modul pencarian berbasis lokasi yang memungkinkan pengguna menemukan donasi di sekitar mereka menggunakan peta interaktif.
+
+<p align="center">
+  <img src="docs/screenshots/ss_03_guest_map.png" alt="Guest Map" width="250"/>
+</p>
 
 **Fitur detail:**
 - 🗺️ **Peta Interaktif** — Integrasi `flutter_map` dengan OpenStreetMap untuk visualisasi peta.
@@ -163,6 +176,10 @@ Halaman detail untuk donatur mengelola satu item donasi: melihat daftar pemohon,
 ### 7. Tracking Donasi
 
 Layar untuk memantau status pengiriman donasi yang sedang aktif dengan timeline visual.
+
+<p align="center">
+  <img src="docs/screenshots/ss_05_lacak_donasi.png" alt="Tracking Screen" width="250"/>
+</p>
 
 **Fitur detail:**
 - ⏱️ **Timeline Visual** — Progress bar 3 tahap (Diproses → Dikirim → Diterima) dengan indikator warna.
@@ -214,6 +231,12 @@ Rekam jejak lengkap semua aktivitas donasi yang telah selesai atau dibatalkan.
 
 Panel admin khusus untuk memverifikasi atau menolak akun penerima berdasarkan dokumen yang diunggah.
 
+<p align="center">
+  <img src="docs/screenshots/ss_07_pending_verification.png" alt="Pending Verification Screen" width="250"/>
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/ss_08_admin_dashboard.png" alt="Admin Dashboard Screen" width="250"/>
+</p>
+
 **Fitur detail:**
 - 👀 **Review Dokumen** — Admin dapat melihat foto KTP dan SKTM/foto rumah yang diunggah.
 - ✅ **Approve Akun** — Menyetujui akun penerima agar dapat menggunakan fitur penuh.
@@ -226,6 +249,12 @@ Panel admin khusus untuk memverifikasi atau menolak akun penerima berdasarkan do
 ### 12. Mode Tamu (Guest)
 
 Pengguna dapat menggunakan aplikasi sebagai tamu tanpa login untuk melihat donasi yang tersedia di area mereka.
+
+<p align="center">
+  <img src="docs/screenshots/ss_03_guest.png" alt="Guest Screen" width="250"/>
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/ss_03_guest_map.png" alt="Guest Map Screen" width="250"/>
+</p>
 
 **Fitur detail:**
 - 👻 **Akses Tanpa Akun** — Lihat daftar donasi dan peta tanpa perlu mendaftar.

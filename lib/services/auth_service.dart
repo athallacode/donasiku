@@ -322,6 +322,24 @@ class AuthService {
     }
   }
 
+  // Update verification documents (KTP & SKTM) — called after auth is established
+  Future<void> updateVerificationDocuments({
+    required String uid,
+    required String ktpUrl,
+    required String sktmUrl,
+  }) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'ktpUrl': ktpUrl,
+        'sktmUrl': sktmUrl,
+      });
+    } catch (e) {
+      AppErrorHandler.logError('AuthService.updateVerificationDocuments', e);
+      rethrow;
+    }
+  }
+
+
   // Upload Profile Picture
   Future<String> uploadProfilePicture(String uid, Uint8List imageBytes) async {
     try {
