@@ -10,6 +10,7 @@ import 'chat_list_screen.dart';
 import 'profile_screen.dart';
 import '../modules/pencarian_area/screens/discovery_screen.dart';
 import '../modules/pencarian_area/models/donation_item.dart';
+import '../services/app_notification_service.dart';
 import '../theme.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -48,6 +49,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (user != null) {
       final role = await _authService.getUserRole(user.uid);
       final isVerified = await _authService.getUserVerificationStatus(user.uid);
+      
+      // Update FCM token for push notifications
+      AppNotificationService().updateFCMTokenForCurrentUser();
+
       if (mounted) {
         setState(() {
           _role = role;

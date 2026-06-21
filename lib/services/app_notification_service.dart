@@ -3,34 +3,78 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/foundation.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'auth_service.dart';
 import 'dart:io';
 
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  debugPrint('Handling background message: ${message.messageId}');
+}
+
 class AppNotificationService {
-  static final AppNotificationService _instance = AppNotificationService._internal();
+  static final AppNotificationService _instance =
+      AppNotificationService._internal();
   factory AppNotificationService() => _instance;
   AppNotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
   static String? pendingPayload;
 
   static const String channelId = 'donasiku_channel';
   static const String channelName = 'Donasiku Notifications';
-  static const String channelDescription = 'Umpan balik instan dan pengingat Donasiku';
+  static const String channelDescription =
+      'Umpan balik instan dan pengingat Donasiku';
 
   Future<void> initialize() async {
     // Initialize timezones for scheduled notifications
     tz.initializeTimeZones();
 
-    const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    
-    const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
+    // Firebase messaging handlers
+    try {
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        debugPrint('Got a message whilst in the foreground!');
+        debugPrint('Message data: ${message.data}');
+
+        if (message.notification != null) {
+          debugPrint('Message also contained a notification: ${message.notification}');
+          showInstantNotification(
+            id: message.hashCode,
+            title: message.notification!.title ?? '',
+            body: message.notification!.body ?? '',
+            payload: message.data['payload'],
+          );
+        }
+      });
+
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        debugPrint('A new onMessageOpenedApp event was published!');
+        if (message.data['payload'] != null) {
+          _handleNotificationClick(message.data['payload']);
+        }
+      });
+    } catch (e) {
+      debugPrint('Error initializing Firebase Messaging: $e');
+    }
+
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const DarwinInitializationSettings iosSettings =
+        DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
 
     const InitializationSettings settings = InitializationSettings(
       android: androidSettings,
@@ -52,8 +96,11 @@ class AppNotificationService {
       final NotificationAppLaunchDetails? launchDetails =
           await _notificationsPlugin.getNotificationAppLaunchDetails();
       if (launchDetails != null && launchDetails.didNotificationLaunchApp) {
-        final NotificationResponse? response = launchDetails.notificationResponse;
-        if (response != null && response.payload != null && response.payload!.isNotEmpty) {
+        final NotificationResponse? response =
+            launchDetails.notificationResponse;
+        if (response != null &&
+            response.payload != null &&
+            response.payload!.isNotEmpty) {
           pendingPayload = response.payload;
         }
       }
@@ -64,15 +111,19 @@ class AppNotificationService {
     // Create high importance channel for Android
     if (Platform.isAndroid) {
       await _notificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(const AndroidNotificationChannel(
-            channelId,
-            channelName,
-            description: channelDescription,
-            importance: Importance.max,
-            playSound: true,
-            enableVibration: true,
-          ));
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(
+            const AndroidNotificationChannel(
+              channelId,
+              channelName,
+              description: channelDescription,
+              importance: Importance.max,
+              playSound: true,
+              enableVibration: true,
+            ),
+          );
     }
   }
 
@@ -89,14 +140,26 @@ class AppNotificationService {
 
   /// Request permissions for Android 13+ and iOS
   Future<bool> requestPermissions() async {
+    try {
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    } catch (_) {}
+
     if (Platform.isIOS) {
       final bool? result = await _notificationsPlugin
-          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
           ?.requestPermissions(alert: true, badge: true, sound: true);
       return result ?? false;
     } else if (Platform.isAndroid) {
       final bool? result = await _notificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.requestNotificationsPermission();
       return result ?? false;
     }
@@ -110,14 +173,15 @@ class AppNotificationService {
     required String body,
     String? payload,
   }) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      channelId,
-      channelName,
-      channelDescription: channelDescription,
-      importance: Importance.max,
-      priority: Priority.high,
-      ticker: 'ticker',
-    );
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          channelId,
+          channelName,
+          channelDescription: channelDescription,
+          importance: Importance.max,
+          priority: Priority.high,
+          ticker: 'ticker',
+        );
 
     const NotificationDetails details = NotificationDetails(
       android: androidDetails,
@@ -144,17 +208,99 @@ class AppNotificationService {
       ),
       payload: '/dashboard',
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
   tz.TZDateTime _nextInstanceOfNineAM() {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 9);
+    tz.TZDateTime scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      9,
+    );
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
     return scheduledDate;
+  }
+
+  /// Fetch and update the FCM device token for the current user in Firestore
+  Future<void> updateFCMTokenForCurrentUser() async {
+    try {
+      final authService = AuthService();
+      final user = authService.currentUser;
+      if (user != null && !authService.isGuest) {
+        await requestPermissions();
+        final token = await FirebaseMessaging.instance.getToken();
+        if (token != null) {
+          debugPrint('FCM Token: $token');
+          await authService.updateFCMToken(user.uid, token);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error updating FCM Token: $e');
+    }
+  }
+
+  /// Send a push notification using Firebase Cloud Messaging HTTP Legacy API
+  Future<void> sendPushNotification({
+    required String receiverUid,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    try {
+      // 1. Get receiver's FCM Token from Firestore
+      final receiverDoc = await FirebaseFirestore.instance.collection('users').doc(receiverUid).get();
+      if (!receiverDoc.exists) return;
+      final fcmToken = receiverDoc.data()?['fcmToken'];
+      if (fcmToken == null || fcmToken.isEmpty) {
+        debugPrint('No FCM token found for user $receiverUid');
+        return;
+      }
+
+      // 2. Get Server Key from Firestore /settings/fcm
+      final settingsDoc = await FirebaseFirestore.instance.collection('settings').doc('fcm').get();
+      String serverKey = '';
+      if (settingsDoc.exists) {
+        serverKey = settingsDoc.data()?['serverKey'] ?? '';
+      }
+
+      if (serverKey.isEmpty) {
+        debugPrint('FCM Server Key not configured in Firestore (/settings/fcm -> serverKey)');
+        return;
+      }
+
+      // 3. Send HTTP POST request
+      final response = await http.post(
+        Uri.parse('https://fcm.googleapis.com/fcm/send'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'key=$serverKey',
+        },
+        body: jsonEncode({
+          'to': fcmToken,
+          'priority': 'high',
+          'notification': {
+            'title': title,
+            'body': body,
+            'sound': 'default',
+          },
+          'data': {
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'payload': payload ?? '/dashboard',
+          },
+        }),
+      );
+
+      debugPrint('FCM Response: ${response.statusCode} - ${response.body}');
+    } catch (e) {
+      debugPrint('Error sending FCM push notification: $e');
+    }
   }
 }

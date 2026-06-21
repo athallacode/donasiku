@@ -10,8 +10,10 @@ import '../widgets/radius_slider.dart';
 import '../widgets/empty_state.dart';
 import '../../../services/donation_service.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/app_notification_service.dart';
 import '../../../utils/app_error_handler.dart';
 import '../../../theme.dart';
+import '../../../widgets/donation_image.dart';
 
 /// Layar utama Discovery Engine & Filtering
 class DiscoveryScreen extends StatefulWidget {
@@ -381,12 +383,12 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
               ),
             ),
 
-            // Marker untuk setiap item (hijau)
+            // Marker untuk setiap item (hijau dengan foto bulat jika ada)
             ...provider.results.map((item) {
               return Marker(
                 point: item.pickupLocation,
-                width: 40,
-                height: 40,
+                width: 42,
+                height: 42,
                 child: GestureDetector(
                   onTap: () => _showMapPopup(context, item),
                   child: Container(
@@ -396,13 +398,35 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                       border: Border.all(color: Colors.white, width: 2),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.emeraldGreen.withAlpha(60),
+                          color: Colors.black.withAlpha(50),
                           blurRadius: 6,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: Icon(item.category.icon,
-                        color: Colors.white, size: 18),
+                    child: ClipOval(
+                      child: SizedBox(
+                        width: 38,
+                        height: 38,
+                        child: item.imageUrl.isNotEmpty
+                            ? DonationImage(
+                                imageUrl: item.imageUrl,
+                                width: 38,
+                                height: 38,
+                                fit: BoxFit.cover,
+                                errorWidget: Icon(
+                                  item.category.icon,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              )
+                            : Icon(
+                                item.category.icon,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                      ),
+                    ),
                   ),
                 ),
               );
@@ -431,15 +455,29 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
           children: [
             Row(
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: item.category.color.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: item.imageUrl.isNotEmpty
+                        ? DonationImage(
+                            imageUrl: item.imageUrl,
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                            errorWidget: Container(
+                              color: item.category.color.withAlpha(25),
+                              child: Icon(item.category.icon,
+                                  color: item.category.color, size: 24),
+                            ),
+                          )
+                        : Container(
+                            color: item.category.color.withAlpha(25),
+                            child: Icon(item.category.icon,
+                                color: item.category.color, size: 24),
+                          ),
                   ),
-                  child: Icon(item.category.icon,
-                      color: item.category.color, size: 24),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -545,15 +583,29 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                 // Header
                 Row(
                   children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: item.category.color.withAlpha(25),
-                        borderRadius: BorderRadius.circular(14),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: SizedBox(
+                        width: 52,
+                        height: 52,
+                        child: item.imageUrl.isNotEmpty
+                            ? DonationImage(
+                                imageUrl: item.imageUrl,
+                                width: 52,
+                                height: 52,
+                                fit: BoxFit.cover,
+                                errorWidget: Container(
+                                  color: item.category.color.withAlpha(25),
+                                  child: Icon(item.category.icon,
+                                      color: item.category.color, size: 28),
+                                ),
+                              )
+                            : Container(
+                                color: item.category.color.withAlpha(25),
+                                child: Icon(item.category.icon,
+                                    color: item.category.color, size: 28),
+                              ),
                       ),
-                      child: Icon(item.category.icon,
-                          color: item.category.color, size: 28),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -752,6 +804,22 @@ class _DiscoveryScreenState extends State<DiscoveryScreen> {
                       requesterId: user.uid,
                       requesterName: userName,
                       message: message,
+                    );
+
+                    // Trigger local notification
+                    await AppNotificationService().showInstantNotification(
+                      id: item.id.hashCode,
+                      title: 'Permintaan Dikirim! 📦',
+                      body: 'Permintaan Anda untuk "${item.name}" sedang menunggu persetujuan donatur.',
+                      payload: '/dashboard',
+                    );
+
+                    // Trigger remote FCM push notification to the Donor
+                    await AppNotificationService().sendPushNotification(
+                      receiverUid: item.donorId,
+                      title: 'Permintaan Donasi Baru! 📦',
+                      body: '$userName meminta barang "${item.name}" Anda.',
+                      payload: '/dashboard',
                     );
 
                     if (context.mounted) {

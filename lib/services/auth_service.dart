@@ -22,10 +22,8 @@ class AuthService {
   }) async {
     User? createdUser;
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
       createdUser = userCredential.user;
 
       // Save role and profile to Firestore
@@ -44,13 +42,6 @@ class AuthService {
           'photoUrl': '',
           'createdAt': FieldValue.serverTimestamp(),
         });
-
-        AppNotificationService().showInstantNotification(
-          id: 1,
-          title: 'Akun Berhasil Dibuat! 🎉',
-          body: 'Selamat bergabung di Donasiku, ${name.isNotEmpty ? name : email.split('@').first}.',
-          payload: '/dashboard',
-        );
       }
 
       return userCredential;
@@ -60,7 +51,9 @@ class AuthService {
         try {
           await createdUser.delete();
         } catch (cleanupError) {
-          debugPrint('Failed to clean up created user after Firestore failure: $cleanupError');
+          debugPrint(
+            'Failed to clean up created user after Firestore failure: $cleanupError',
+          );
         }
       }
       AppErrorHandler.logError('AuthService.signUp', e);
@@ -79,12 +72,6 @@ class AuthService {
         password: password,
       );
 
-      AppNotificationService().showInstantNotification(
-        id: 2,
-        title: 'Selamat Datang Kembali! 👋',
-        body: 'Berbagi kebaikan dimulai dari sini.',
-        payload: '/dashboard',
-      );
 
       return userCredential;
     } catch (e) {
@@ -112,7 +99,8 @@ class AuthService {
       if (googleUser == null) return null; // User cancelled
 
       // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       // Create a new credential
       final OAuthCredential credential = GoogleAuthProvider.credential(
@@ -121,14 +109,17 @@ class AuthService {
       );
 
       // Once signed in, return the UserCredential
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
 
       // If new user, create a default Firestore profile
       if (userCredential.additionalUserInfo?.isNewUser ?? false) {
         final user = userCredential.user!;
         await _firestore.collection('users').doc(user.uid).set({
           'email': user.email ?? '',
-          'name': user.displayName ?? (user.email?.split('@').first ?? 'Pengguna'),
+          'name':
+              user.displayName ?? (user.email?.split('@').first ?? 'Pengguna'),
           'role': 'Donatur', // Default role for Google login
           'isVerified': false,
           'ktpUrl': '',
@@ -137,22 +128,7 @@ class AuthService {
           'address': '',
           'photoUrl': user.photoURL ?? '',
           'createdAt': FieldValue.serverTimestamp(),
-        });
-
-        AppNotificationService().showInstantNotification(
-          id: 10,
-          title: 'Selamat Datang! 🚀',
-          body: 'Pendaftaran via Google berhasil.',
-          payload: '/dashboard',
-        );
-      } else {
-        AppNotificationService().showInstantNotification(
-          id: 11,
-          title: 'Login Berhasil! 👋',
-          body: 'Selamat datang kembali melalui Google.',
-          payload: '/dashboard',
-        );
-      }
+        });      }
 
       return userCredential;
     } catch (e) {
@@ -215,7 +191,10 @@ class AuthService {
   Future<String?> getUserRole(String uid) async {
     if (isGuest) return 'Guest';
     try {
-      DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(uid)
+          .get();
       if (doc.exists) {
         return (doc.data() as Map<String, dynamic>)['role'];
       }
@@ -230,7 +209,10 @@ class AuthService {
   Future<bool> getUserVerificationStatus(String uid) async {
     if (isGuest) return false;
     try {
-      DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(uid)
+          .get();
       if (doc.exists) {
         return (doc.data() as Map<String, dynamic>)['isVerified'] ?? false;
       }
@@ -275,7 +257,10 @@ class AuthService {
       };
     }
     try {
-      DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(uid)
+          .get();
       if (doc.exists) {
         return doc.data() as Map<String, dynamic>;
       }
@@ -339,21 +324,24 @@ class AuthService {
     }
   }
 
-
   // Upload Profile Picture
   Future<String> uploadProfilePicture(String uid, Uint8List imageBytes) async {
     try {
-      Reference ref = FirebaseStorage.instance.ref().child('users').child(uid).child('profile.jpg');
+      Reference ref = FirebaseStorage.instance
+          .ref()
+          .child('users')
+          .child(uid)
+          .child('profile.jpg');
       UploadTask uploadTask = ref.putData(
         imageBytes,
         SettableMetadata(contentType: 'image/jpeg'),
       );
       TaskSnapshot snapshot = await uploadTask;
       String downloadUrl = await snapshot.ref.getDownloadURL();
-      
+
       // Update the user's profile with the new photo URL
       await updateUserProfile(uid: uid, photoUrl: downloadUrl);
-      
+
       return downloadUrl;
     } catch (e) {
       AppErrorHandler.logError('AuthService.uploadProfilePicture', e);
@@ -364,19 +352,35 @@ class AuthService {
   // Delete Profile Picture
   Future<void> deleteProfilePicture(String uid) async {
     try {
-      Reference ref = FirebaseStorage.instance.ref().child('users').child(uid).child('profile.jpg');
+      Reference ref = FirebaseStorage.instance
+          .ref()
+          .child('users')
+          .child(uid)
+          .child('profile.jpg');
       try {
         await ref.delete();
       } catch (e) {
         // If file doesn't exist, ignore the error
         debugPrint('Profile picture file not found or already deleted: $e');
       }
-      
+
       // Update the user's profile to clear the photo URL
       await updateUserProfile(uid: uid, photoUrl: '');
     } catch (e) {
       AppErrorHandler.logError('AuthService.deleteProfilePicture', e);
       rethrow;
+    }
+  }
+
+  // Update FCM token
+  Future<void> updateFCMToken(String uid, String token) async {
+    if (isGuest) return;
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'fcmToken': token,
+      });
+    } catch (e) {
+      AppErrorHandler.logError('AuthService.updateFCMToken', e);
     }
   }
 }

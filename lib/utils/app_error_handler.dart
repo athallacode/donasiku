@@ -75,11 +75,11 @@ class AppErrorHandler {
     try {
       loadingStateSetter?.call(true);
       final result = await action();
-      
+
       if (successMessage != null && context.mounted) {
         showSuccess(context, successMessage);
       }
-      
+
       return result;
     } catch (e, stack) {
       logError(featureName, e, stack);
@@ -95,20 +95,40 @@ class AppErrorHandler {
   /// Shows a standardized error snackbar.
   static void showError(BuildContext context, dynamic error) {
     final message = mapErrorToMessage(error);
-    _showSnackBar(context, message, AppTheme.errorRed, Icons.error_outline_rounded);
+    _showSnackBar(
+      context,
+      message,
+      AppTheme.errorRed,
+      Icons.error_outline_rounded,
+    );
   }
 
   /// Shows a standardized success snackbar.
   static void showSuccess(BuildContext context, String message) {
-    _showSnackBar(context, message, AppTheme.successGreen, Icons.check_circle_outline_rounded);
+    _showSnackBar(
+      context,
+      message,
+      AppTheme.successGreen,
+      Icons.check_circle_outline_rounded,
+    );
   }
 
   /// Shows a standardized warning snackbar.
   static void showWarning(BuildContext context, String message) {
-    _showSnackBar(context, message, AppTheme.warningOrange, Icons.warning_amber_rounded);
+    _showSnackBar(
+      context,
+      message,
+      AppTheme.warningOrange,
+      Icons.warning_amber_rounded,
+    );
   }
 
-  static void _showSnackBar(BuildContext context, String message, Color color, IconData icon) {
+  static void _showSnackBar(
+    BuildContext context,
+    String message,
+    Color color,
+    IconData icon,
+  ) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -119,7 +139,10 @@ class AppErrorHandler {
             Expanded(
               child: Text(
                 message,
-                style: AppTheme.bodySmall.copyWith(color: Colors.white, fontWeight: FontWeight.w500),
+                style: AppTheme.bodySmall.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -134,7 +157,11 @@ class AppErrorHandler {
   }
 
   /// Standardized logging with device info and Firestore sync.
-  static void logError(String feature, dynamic error, [StackTrace? stackTrace]) async {
+  static void logError(
+    String feature,
+    dynamic error, [
+    StackTrace? stackTrace,
+  ]) async {
     final timestamp = DateTime.now();
     debugPrint('----------------------------------------');
     debugPrint('ERROR in Feature: $feature');
@@ -144,16 +171,21 @@ class AppErrorHandler {
       debugPrint('StackTrace: $stackTrace');
     }
     debugPrint('----------------------------------------');
-    
+
     // Log to Firestore with enhanced metadata
     _logToFirestore(feature, error, stackTrace, timestamp);
   }
 
   /// Private helper to log errors to Firestore collection with device details.
-  static void _logToFirestore(String feature, dynamic error, StackTrace? stack, DateTime time) async {
+  static void _logToFirestore(
+    String feature,
+    dynamic error,
+    StackTrace? stack,
+    DateTime time,
+  ) async {
     try {
       Map<String, dynamic> deviceData = {};
-      
+
       try {
         if (Platform.isAndroid) {
           AndroidDeviceInfo androidInfo = await _deviceInfo.androidInfo;

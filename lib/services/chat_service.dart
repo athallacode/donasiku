@@ -5,6 +5,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
 import '../utils/app_error_handler.dart';
 import '../models/chat_model.dart';
+import 'app_notification_service.dart';
+import 'package:flutter/foundation.dart';
 
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -99,6 +101,27 @@ class ChatService {
         'lastMessage': imageUrl != null ? '📷 Foto' : text,
         'lastMessageTime': Timestamp.fromDate(DateTime.now()),
       });
+
+      // Send push notification to the recipient
+      try {
+        final chatRoomDoc = await _firestore.collection('chatRooms').doc(chatRoomId).get();
+        if (chatRoomDoc.exists) {
+          final donorId = chatRoomDoc.data()?['donorId'] ?? '';
+          final receiverId = chatRoomDoc.data()?['receiverId'] ?? '';
+          final recipientId = senderId == donorId ? receiverId : donorId;
+          
+          if (recipientId.isNotEmpty) {
+            await AppNotificationService().sendPushNotification(
+              receiverUid: recipientId,
+              title: senderName,
+              body: imageUrl != null ? '📷 Foto' : text,
+              payload: '/dashboard',
+            );
+          }
+        }
+      } catch (fcmError) {
+        debugPrint('Error sending chat push notification: $fcmError');
+      }
     } catch (e) {
       AppErrorHandler.logError('ChatService.sendMessage', e);
       rethrow;

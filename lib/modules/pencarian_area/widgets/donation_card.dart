@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/donation_item.dart';
 import '../utils/distance_calculator.dart';
 import '../../../theme.dart';
+import '../../../widgets/donation_image.dart';
 
 /// Widget card untuk menampilkan item donasi di list view
 class DonationCard extends StatelessWidget {
@@ -40,18 +41,35 @@ class DonationCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Ikon kategori
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: item.category.color.withAlpha(25),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  item.category.icon,
-                  color: item.category.color,
-                  size: 28,
+              // Gambar item / Ikon kategori
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: item.imageUrl.isNotEmpty
+                      ? DonationImage(
+                          imageUrl: item.imageUrl,
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                          errorWidget: Container(
+                            color: item.category.color.withAlpha(25),
+                            child: Icon(
+                              item.category.icon,
+                              color: item.category.color,
+                              size: 28,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          color: item.category.color.withAlpha(25),
+                          child: Icon(
+                            item.category.icon,
+                            color: item.category.color,
+                            size: 28,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(width: 14),

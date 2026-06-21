@@ -8,6 +8,7 @@ import 'edit_donation_screen.dart';
 import 'donation_detail_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../services/app_notification_service.dart';
 
 class DonationManagementScreen extends StatefulWidget {
   final Donation donation;
@@ -171,6 +172,23 @@ class _DonationManagementScreenState extends State<DonationManagementScreen> {
                               donationId: donationId,
                               requesterId: request.requesterId,
                             );
+                            
+                            // Trigger local notification
+                            await AppNotificationService().showInstantNotification(
+                              id: donationId.hashCode + 1,
+                              title: 'Permintaan Ditolak ❌',
+                              body: 'Anda menolak permintaan ${request.requesterName} untuk "${widget.donation.productName}".',
+                              payload: '/dashboard',
+                            );
+
+                            // Trigger remote FCM push notification to the Requester
+                            await AppNotificationService().sendPushNotification(
+                              receiverUid: request.requesterId,
+                              title: 'Permintaan Belum Disetujui 😔',
+                              body: 'Maaf, permintaan Anda untuk "${widget.donation.productName}" belum disetujui.',
+                              payload: '/dashboard',
+                            );
+
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -197,6 +215,23 @@ class _DonationManagementScreenState extends State<DonationManagementScreen> {
                               requesterId: request.requesterId,
                               requesterName: request.requesterName,
                             );
+
+                            // Trigger local notification
+                            await AppNotificationService().showInstantNotification(
+                              id: donationId.hashCode + 2,
+                              title: 'Permintaan Disetujui! 🎉',
+                              body: 'Anda menyetujui permintaan ${request.requesterName} untuk "${widget.donation.productName}". Barang kini dalam proses.',
+                              payload: '/dashboard',
+                            );
+
+                            // Trigger remote FCM push notification to the Requester
+                            await AppNotificationService().sendPushNotification(
+                              receiverUid: request.requesterId,
+                              title: 'Permintaan Disetujui! 🎉',
+                              body: 'Donatur menyetujui permintaan Anda untuk "${widget.donation.productName}".',
+                              payload: '/dashboard',
+                            );
+
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
