@@ -11,7 +11,7 @@ import 'mock_data.dart';
 class DiscoveryService {
   /// Flag untuk switch antara mock data dan Firestore
   /// Set ke false untuk menggunakan Firestore langsung
-  static const bool useMockData = true;
+  static const bool useMockData = false;
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 

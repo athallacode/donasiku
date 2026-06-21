@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../widgets/donation_image.dart';
 import 'chat_screen.dart';
 import 'package:intl/intl.dart';
+import '../services/app_notification_service.dart';
 
 class DonationDetailScreen extends StatefulWidget {
   final Donation donation;
@@ -94,6 +95,23 @@ class _DonationDetailScreenState extends State<DonationDetailScreen> {
         requesterName: userName,
         message: message,
       );
+      
+      // Trigger local notification
+      await AppNotificationService().showInstantNotification(
+        id: widget.donation.id.hashCode,
+        title: 'Permintaan Dikirim! 📦',
+        body: 'Permintaan Anda untuk "${widget.donation.productName}" sedang menunggu persetujuan donatur.',
+        payload: '/dashboard',
+      );
+
+      // Trigger remote FCM push notification to the Donor
+      await AppNotificationService().sendPushNotification(
+        receiverUid: widget.donation.donorId,
+        title: 'Permintaan Donasi Baru! 📦',
+        body: '$userName meminta barang "${widget.donation.productName}" Anda.',
+        payload: '/dashboard',
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

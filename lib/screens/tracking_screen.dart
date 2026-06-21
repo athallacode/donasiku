@@ -6,6 +6,7 @@ import '../services/chat_service.dart';
 import '../models/donation_model.dart';
 import '../widgets/donation_image.dart';
 import 'chat_screen.dart';
+import '../services/app_notification_service.dart';
 
 class TrackingScreen extends StatelessWidget {
   final bool isPreviewMode;
@@ -387,8 +388,40 @@ class _TrackingCard extends StatelessWidget {
       try {
         if (role == 'Donatur') {
           await donationService.markAsShipped(donation.id);
+          // Trigger local notification
+          await AppNotificationService().showInstantNotification(
+            id: donation.id.hashCode + 3,
+            title: 'Barang Sedang Dikirim! 🚚',
+            body: 'Donasi "${donation.productName}" sedang dalam perjalanan menuju penerima.',
+            payload: '/dashboard',
+          );
+          
+          // Trigger remote FCM push notification to the Receiver
+          if (donation.receiverId != null && donation.receiverId!.isNotEmpty) {
+            await AppNotificationService().sendPushNotification(
+              receiverUid: donation.receiverId!,
+              title: 'Donasi Sedang Dikirim! 🚚',
+              body: 'Donasi "${donation.productName}" telah dikirim oleh donatur.',
+              payload: '/dashboard',
+            );
+          }
         } else {
           await donationService.markAsReceived(donation.id);
+          // Trigger local notification
+          await AppNotificationService().showInstantNotification(
+            id: donation.id.hashCode + 4,
+            title: 'Donasi Diterima! 💝',
+            body: 'Terima kasih telah mengonfirmasi penerimaan "${donation.productName}". Donasi selesai.',
+            payload: '/dashboard',
+          );
+
+          // Trigger remote FCM push notification to the Donor
+          await AppNotificationService().sendPushNotification(
+            receiverUid: donation.donorId,
+            title: 'Donasi Telah Diterima! 💝',
+            body: 'Penerima telah mengonfirmasi penerimaan donasi "${donation.productName}".',
+            payload: '/dashboard',
+          );
         }
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

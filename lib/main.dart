@@ -17,17 +17,17 @@ import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize notification service
-  final notificationService = AppNotificationService();
-  await notificationService.initialize();
-  await notificationService.scheduleDailyReminder();
 
   try {
     await Firebase.initializeApp();
   } catch (e) {
     AppErrorHandler.logError('Main.initialize', e);
   }
+
+  // Initialize notification service
+  final notificationService = AppNotificationService();
+  await notificationService.initialize();
+  await notificationService.scheduleDailyReminder();
   // Catch errors that happen outside the Flutter framework
   PlatformDispatcher.instance.onError = (error, stack) {
     AppErrorHandler.logError('System.PlatformError', error, stack);
@@ -52,7 +52,11 @@ class DonasikuApp extends StatelessWidget {
         initialRoute: '/splash',
         builder: (context, widget) {
           ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
-            AppErrorHandler.logError('System.RenderError', errorDetails.exception, errorDetails.stack);
+            AppErrorHandler.logError(
+              'System.RenderError',
+              errorDetails.exception,
+              errorDetails.stack,
+            );
             return Scaffold(
               body: Center(
                 child: Padding(
@@ -60,9 +64,16 @@ class DonasikuApp extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.warning_amber_rounded, size: 64, color: AppTheme.errorRed),
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        size: 64,
+                        color: AppTheme.errorRed,
+                      ),
                       const SizedBox(height: 16),
-                      Text('Terjadi Kesalahan Tampilan', style: AppTheme.headingSmall),
+                      Text(
+                        'Terjadi Kesalahan Tampilan',
+                        style: AppTheme.headingSmall,
+                      ),
                       const SizedBox(height: 8),
                       Text(
                         'Aplikasi mengalami kendala saat memuat antarmuka. Kami telah mencatat kejadian ini.',
@@ -71,7 +82,9 @@ class DonasikuApp extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
-                        onPressed: () => Navigator.of(context).pushReplacementNamed('/splash'),
+                        onPressed: () => Navigator.of(
+                          context,
+                        ).pushReplacementNamed('/splash'),
                         child: const Text('Muat Ulang Aplikasi'),
                       ),
                     ],
